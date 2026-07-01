@@ -1,0 +1,19 @@
+{
+  "types": {
+    "aliases": "aliases",
+    "cssclasses": "multitext",
+    "tags": "tags",
+    "spiritual": "number",
+    "wife": "number",
+    "kids": "number",
+    "friend": "number",
+    "learn": "number",
+    "create": "number",
+    "exercise": "number",
+    "reading": "checkbox",
+    "writing": "checkbox",
+    "planning": "checkbox",
+    "shutdown": "checkbox",
+    "prayer": "checkbox"
+  }
+}

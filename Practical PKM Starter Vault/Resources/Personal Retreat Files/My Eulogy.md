@@ -1,0 +1,9 @@
+Mike Schmitz was a loving husband to his wife Rachel and an ever-present father to Toby, Joshua, Jonathan, Malachi, and Adelaide. His Family was his first ministry, and he always made sure they were priority. He frequently said no to work and business opportunities to spend quality time and go on adventures with the people he valued the most.
+
+Mike was also a committed member of his church, and when he wasn't spending time with his family he could often be found serving there. He believed that God had blessed him richly, and he gave generously of his time and treasure to those who had need. He invested heavily in others and did his best to help them reach their full potential.
+
+Mike's life was driven by a desire to be a good steward of what was entrusted to him by God. He desired to inspire, encourage, and teach others to connect to their calling, discover their destiny, and live the life they were created for. Everything he did was filtered through this "LifeTheme," and he helped others to accept responsibility, gain clarity, and take action in living a purpose-driven and meaningful life. He helped countless people find their why, multiply their time & talent, and leave a bigger dent in the universe.
+
+He was an entrepreneur who loved building businesses and making art. Before he died, he wrote several New York Times best-selling books and gave away over $10 million dollars to causes he believed in. 
+
+He taught his kids to be lifelong learners and to discover their own creativity. They have all followed in his footsteps as creative entrepreneurs who live life on their own terms.

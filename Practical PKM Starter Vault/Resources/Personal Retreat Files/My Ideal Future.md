@@ -1,0 +1,18 @@
+- I wake up at 6am, read my Bible, pray, and then head downtown by 7am
+- I have an office at Menlo Park overlooking the river
+- I spend the first few hours of each workday writing
+- I'm home after lunch and free to hang out with my family
+- My schedule is very flexible and I take a regular mid-day break to go to the gym or go for a long run
+- I have lots of time to think
+- I have lots of time to create
+- My family is at home with me
+- We enjoy spending lots of time together and prioritize being together
+- We have dinner together as a family every night and regularly have deep, meaningful conversations while sharing a meal together
+- I live in a house with a view of the woods and the lake
+- I can work from anywhere
+- I coach Middle School & High School soccer and have energy to play with the kids
+- We have regular board game nights as a family
+- We serve at church and help lead multiple ministries
+- I have occasional coaching meetings where I help people multiply their potential (but not so many that I feel like I can't give my very best to my clients)
+- My wife & I have enough money that we are able to contribute to every cause we believe in
+- I am involved in my community and enjoy working with others to make it a better place to live
