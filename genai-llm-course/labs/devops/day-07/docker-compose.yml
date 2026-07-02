@@ -1,0 +1,41 @@
+# ---------------------------------------------------------------------------
+# Acme HR Knowledge Assistant — docker-compose for local development
+#
+# Usage (from repo root):
+#   docker-compose -f labs/devops/day-07/docker-compose.yml up --build
+#
+# The build context is set to the repo root (.) so that the Dockerfile can
+# reach both the shared service files and the data/hr-corpus/ directory.
+# ---------------------------------------------------------------------------
+
+version: "3.9"
+
+services:
+  hr-assistant:
+    build:
+      context: ../../../        # repo root — needed for corpus COPY
+      dockerfile: labs/devops/day-07/Dockerfile
+    image: hr-assistant:day07
+    container_name: hr-assistant
+    ports:
+      - "8000:8000"
+    environment:
+      # All config via environment — 12-factor principle.
+      # Secrets are injected at runtime; never baked into the image.
+      APP_VERSION: "0.1.0"
+      LOG_LEVEL: "INFO"
+      # Uncomment and set if using a real LLM backend:
+      # LLM_BASE_URL: "http://host.docker.internal:8001/v1"
+      # LLM_MODEL: "meta-llama/Meta-Llama-3-8B-Instruct"
+      # ANTHROPIC_API_KEY: "${ANTHROPIC_API_KEY}"
+    healthcheck:
+      test:
+        - "CMD"
+        - "python"
+        - "-c"
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')"
+      interval: 30s
+      timeout: 5s
+      start_period: 10s
+      retries: 3
+    restart: unless-stopped

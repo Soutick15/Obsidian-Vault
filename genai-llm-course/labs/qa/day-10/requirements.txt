@@ -1,0 +1,9 @@
+# Day 10 — RAG & Agent Evaluation
+# Core lab: stdlib + numpy only. No API key needed.
+numpy>=1.24
+
+# Optional: Ragas (requires an API key and a datasets install)
+# Uncomment to enable the Ragas reference block in solution.py
+# ragas>=0.1.0
+# datasets>=2.14.0
+# anthropic>=0.25.0   # if using Claude as the Ragas judge

@@ -1,0 +1,105 @@
+# Capstone CI/CD Pipeline — Acme HR Knowledge Assistant
+# TODO: Complete each stage according to your capstone implementation
+# This stub shows the required structure; fill in the steps.
+
+name: Acme HR — Deploy Pipeline
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+
+env:
+  IMAGE_NAME: acme-hr-assistant
+  # TODO: Set these in GitHub repository secrets
+  # REGISTRY: ghcr.io/your-org
+  # KUBECONFIG: (base64-encoded kubeconfig)
+
+jobs:
+  lint-and-test:
+    name: Lint & Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r capstone/devops/starter/requirements.txt
+      - name: Lint
+        run: |
+          pip install flake8
+          flake8 capstone/devops/starter/ --max-line-length=120 --ignore=E501,W503
+      - name: Run tests
+        run: |
+          # TODO: Add pytest invocation
+          python -c "from capstone.devops.starter.observability import record_request; print('import OK')"
+          python -c "from capstone.devops.starter.reliability import CircuitBreaker; print('import OK')"
+          python -c "from capstone.devops.starter.security import audit_log; print('import OK')"
+
+  build-and-scan:
+    name: Build & Scan Image
+    runs-on: ubuntu-latest
+    needs: lint-and-test
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: |
+          docker build -t $IMAGE_NAME:${{ github.sha }} capstone/devops/starter/
+      - name: Scan image for vulnerabilities
+        run: |
+          # TODO: Install and run trivy or grype
+          # trivy image --exit-code 1 --severity HIGH,CRITICAL $IMAGE_NAME:${{ github.sha }}
+          echo "TODO: add image scanning (trivy/grype)"
+
+  eval-gate:
+    name: Eval Gate
+    runs-on: ubuntu-latest
+    needs: build-and-scan
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+      - name: Install dependencies
+        run: pip install -r capstone/devops/starter/requirements.txt
+      - name: Run eval gate
+        run: |
+          # TODO: Run your eval script and check score >= threshold
+          # python eval_gate.py --threshold 0.7 --fail-on-low
+          echo "TODO: implement eval gate (score must be >= 0.7 to proceed)"
+          echo "EVAL_SCORE=0.85" >> $GITHUB_ENV
+      - name: Check eval score
+        run: |
+          python -c "
+          import os, sys
+          score = float(os.getenv('EVAL_SCORE', '0'))
+          threshold = 0.7
+          print(f'Eval score: {score:.2f} (threshold: {threshold})')
+          if score < threshold:
+              print('FAIL: score below threshold')
+              sys.exit(1)
+          print('PASS: score above threshold')
+          "
+
+  deploy-canary:
+    name: Deploy (Canary)
+    runs-on: ubuntu-latest
+    needs: eval-gate
+    if: github.ref == 'refs/heads/main'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Deploy canary (10%)
+        run: |
+          # TODO: Implement canary deployment
+          # bash capstone/devops/starter/deploy.sh canary
+          echo "TODO: deploy 10% canary to production"
+      - name: Run smoke tests
+        run: |
+          # TODO: Hit /health on canary pod
+          echo "TODO: validate canary is healthy"
+      - name: Promote or rollback
+        run: |
+          # TODO: If smoke tests pass, promote to 100%; else rollback
+          echo "TODO: promote canary or rollback"

@@ -1,0 +1,61 @@
+# Kubernetes Deployment for Acme HR Knowledge Assistant
+# TODO: Replace image with your actual registry/image:tag
+# TODO: Set namespace to your target namespace
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: acme-hr-assistant
+  labels:
+    app: acme-hr-assistant
+    version: "v1"
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: acme-hr-assistant
+  template:
+    metadata:
+      labels:
+        app: acme-hr-assistant
+        version: "v1"
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8000"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+        - name: acme-hr-assistant
+          image: acme-hr-assistant:latest  # TODO: replace with your image
+          ports:
+            - containerPort: 8000
+          env:
+            - name: LLM_PROVIDER
+              value: "mock"  # TODO: use Secret for real provider
+            - name: APP_VERSION
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.labels['version']
+          envFrom:
+            - secretRef:
+                name: acme-hr-secrets
+                optional: true  # allow running without secret in dev
+          resources:
+            requests:
+              cpu: "100m"
+              memory: "256Mi"
+            limits:
+              cpu: "500m"
+              memory: "512Mi"
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 15
+            periodSeconds: 20
+      # TODO: Add imagePullSecrets if using private registry

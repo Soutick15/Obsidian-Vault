@@ -1,0 +1,127 @@
+# Deployment — declares the desired state for the HR Assistant pods.
+#
+# Key design decisions documented inline:
+#   - replicas: 2 for basic availability during rolling updates
+#   - RollingUpdate with maxUnavailable:0 for zero-downtime deploys
+#   - startupProbe: generous window to cover model-loading time
+#   - readinessProbe: gates traffic until the app is warm
+#   - livenessProbe: detects deadlocks after successful startup
+#   - resource requests+limits: scheduler placement + OOM protection
+#   - envFrom ConfigMap: externalised configuration, no secrets baked in
+#
+# Kubernetes docs: https://kubernetes.io/docs/concepts/workloads/controllers/deployment/
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hr-assistant
+  namespace: default
+  labels:
+    app: hr-assistant
+    version: "0.1.0"
+spec:
+  replicas: 2
+
+  # --- Selector ---------------------------------------------------------
+  # Must match spec.template.metadata.labels exactly.
+  # Changing this after creation requires deleting and recreating the Deployment.
+  selector:
+    matchLabels:
+      app: hr-assistant
+
+  # --- Update strategy --------------------------------------------------
+  # maxUnavailable:0 + readiness probes = zero-downtime rolling update.
+  # maxSurge:1 allows one extra pod to be created during the rollout.
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+
+  # --- Pod template -----------------------------------------------------
+  template:
+    metadata:
+      labels:
+        app: hr-assistant      # Must match spec.selector.matchLabels above
+        version: "0.1.0"
+
+    spec:
+      # Graceful shutdown: give the app time to finish in-flight requests
+      terminationGracePeriodSeconds: 30
+
+      containers:
+        - name: hr-assistant
+          # Replace with your actual registry/image in production.
+          image: acme/hr-assistant:0.1.0
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8000
+              protocol: TCP
+
+          # --- Environment from ConfigMap --------------------------------
+          envFrom:
+            - configMapRef:
+                name: hr-assistant-config
+
+          # --- Resource requests and limits -----------------------------
+          # requests: guaranteed by scheduler — pod placed on a node with
+          #           at least this much free capacity.
+          # limits:   hard ceiling — CPU is throttled; memory triggers OOM kill.
+          #
+          # NOTE: These are DEMO values for the shared HR assistant (a lightweight
+          # FastAPI app). A real LLM inference pod serving model weights needs far
+          # more memory — see Concept Deep-Dive Q4 for sizing guidance. For a 7B
+          # FP16 model, expect 14–16 GiB just for weights, plus KV-cache headroom.
+          #
+          # IMPORTANT: limits.memory must cover:
+          #   model weights + KV cache + Python runtime + request buffers
+          # Profile with `kubectl top pod` at peak load, then add 25% headroom.
+          resources:
+            requests:
+              cpu: "250m"       # 0.25 vCPU guaranteed
+              memory: "512Mi"   # 512 MiB guaranteed
+            limits:
+              cpu: "1000m"      # 1 vCPU maximum (throttled if exceeded)
+              memory: "1Gi"     # 1 GiB maximum (OOM-killed if exceeded)
+
+          # --- Startup probe --------------------------------------------
+          # Blocks readiness and liveness probes until this passes.
+          # failureThreshold * periodSeconds = 20 * 15s = 300s max startup window.
+          # Increase for large models with slow weight loading.
+          startupProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            failureThreshold: 20
+            periodSeconds: 15
+            successThreshold: 1
+            timeoutSeconds: 5
+
+          # --- Readiness probe ------------------------------------------
+          # Controls whether this pod receives traffic from the Service.
+          # Fails → pod removed from endpoint list (not restarted).
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+            timeoutSeconds: 5
+
+          # --- Liveness probe -------------------------------------------
+          # Detects deadlocks / unrecoverable failure states.
+          # Fails → container restarted.
+          # Use a longer initialDelaySeconds so it does not fire before
+          # the startupProbe finishes; startupProbe technically guards this
+          # but explicit initialDelaySeconds adds a safety margin.
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            failureThreshold: 4
+            successThreshold: 1
+            timeoutSeconds: 5

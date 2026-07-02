@@ -1,0 +1,12 @@
+# Day 4 Lab — optional provider dependencies
+# The lab runs with NO dependencies (mock path uses only stdlib).
+# Install the provider(s) you plan to use.
+
+# Anthropic (Claude)
+anthropic>=0.30.0
+
+# OpenAI
+# openai>=1.30.0
+
+# python-dotenv — load .env file automatically (recommended)
+python-dotenv>=1.0.0

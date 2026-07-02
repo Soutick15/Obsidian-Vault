@@ -1,0 +1,10 @@
+# Day 12 — Exploratory Testing Agent
+# No third-party packages required.
+# All logic uses Python 3.9+ standard library:
+#   collections, dataclasses, json, math, os, pathlib, re, sys, textwrap
+
+# Optional — only needed for the real-LLM probe-generation path:
+#   anthropic>=0.28   (pip install anthropic)
+#
+# The lab runs fully without these; install only if you want to
+# exercise the optional LLM-assisted probe generation.

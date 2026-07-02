@@ -1,0 +1,11 @@
+# Day 12 Lab — Structured Extraction Service
+# Core (required — runs locally, no API key needed)
+pydantic>=2.0.0
+
+# Provider SDKs (optional — lab runs in mock mode without these)
+# Uncomment the provider(s) you have credentials for:
+# anthropic>=0.25.0
+# openai>=1.14.0
+
+# Utility (already present in base environment)
+python-dotenv>=1.0.0

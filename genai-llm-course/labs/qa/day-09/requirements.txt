@@ -1,0 +1,7 @@
+# Day 9 — LLM-as-Judge Scorer
+# All stdlib; no mandatory third-party packages.
+# Uncomment the line below if you want to use the real-judge path (claude-haiku-4-5).
+# anthropic>=0.40.0
+#
+# Optional: python-dotenv for loading .env files automatically
+# python-dotenv>=1.0.0

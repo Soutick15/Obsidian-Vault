@@ -1,0 +1,7 @@
+# Acme HR Knowledge Assistant — SUT dependencies
+# All retrieval is pure Python (stdlib only).
+# No API keys, no embeddings model, no network access required.
+# The optional packages below improve nothing here — listed for reference only.
+
+# No required third-party dependencies.
+# Python >= 3.9 standard library is sufficient (math, re, string, collections, pathlib).

@@ -1,0 +1,12 @@
+# Day 5 lab dependencies
+# Both provider SDKs are optional -- the lab runs in mock mode with no keys installed.
+# Install whichever providers you want to use:
+
+# Anthropic (Claude)
+anthropic>=0.25.0
+
+# OpenAI (GPT)
+openai>=1.14.0
+
+# .env support (optional -- keys can also be passed as env vars directly)
+python-dotenv>=1.0.0

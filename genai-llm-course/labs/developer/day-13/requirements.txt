@@ -1,0 +1,17 @@
+# Day 13 — Security & Guardrails
+# Core: stdlib only (re, dataclasses, typing) — no external packages required to run the lab.
+# Optional packages below are needed only if you use a real LLM provider.
+
+# --- Optional: real LLM providers (choose one) ---
+# anthropic>=0.28.0        # Claude; model: claude-haiku-4-5
+# openai>=1.30.0           # OpenAI; model: gpt-5-mini
+
+# --- Optional: structured output validation ---
+pydantic>=2.0.0
+
+# --- Optional: enhanced PII detection (stretch goal) ---
+# spacy>=3.7.0
+# python -m spacy download en_core_web_sm
+
+# --- Dev / test ---
+# pytest>=8.0.0

@@ -1,0 +1,9 @@
+# Day 6 Lab — Requirements
+# All dependencies are Python stdlib — no pip installs required.
+# The SUT (hr_assistant.py) is also stdlib-only.
+#
+# Python >= 3.11 required (for match/case and improved typing).
+#
+# If you want to run optional rich-table output:
+#   pip install rich
+# The solution.py works with or without it (falls back to plain text).

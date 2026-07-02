@@ -1,0 +1,9 @@
+# Day 7 — RAG Basics
+# Core dependencies (all run locally; no API key required for the mock path)
+chromadb>=0.5.0
+sentence-transformers>=3.0.0
+numpy>=1.26.0
+
+# Optional: live generation providers (comment out if not needed)
+# anthropic>=0.30.0
+# openai>=1.30.0

@@ -1,0 +1,7 @@
+fastapi>=0.111.0
+uvicorn>=0.29.0
+httpx>=0.27.0
+# prometheus_client is optional — the lab uses hand-rolled text-format generation
+# Uncomment to use the official library instead:
+# prometheus-client>=0.20.0
+scikit-learn>=1.4.0

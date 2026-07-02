@@ -1,0 +1,23 @@
+# ConfigMap — non-sensitive configuration for the HR Assistant service.
+# Mounted into pods as environment variables via envFrom.
+#
+# Kubernetes docs: https://kubernetes.io/docs/concepts/configuration/configmap/
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hr-assistant-config
+  namespace: default
+  labels:
+    app: hr-assistant
+    component: config
+data:
+  # Application version string — informational; exposed via /health
+  APP_VERSION: "0.1.0"
+  # Number of corpus chunks retrieved per /chat request
+  DEFAULT_K: "3"
+  # Log verbosity: DEBUG | INFO | WARNING | ERROR
+  LOG_LEVEL: "INFO"
+  # Use mock LLM (no API key required). Set to "false" only with a real provider key.
+  USE_MOCK: "true"
+  # Listening port inside the container
+  PORT: "8000"

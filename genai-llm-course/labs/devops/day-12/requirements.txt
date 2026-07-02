@@ -1,0 +1,7 @@
+# Day 12 — Reliability & Resilience: Retry, Circuit Breaker, Failover, SLO
+# stdlib only — no pip install required
+# scikit-learn is optional (used by the shared service retriever for TF-IDF)
+#
+# To enable real LLM providers (optional):
+#   pip install anthropic        # set ANTHROPIC_API_KEY
+#   pip install openai           # set OPENAI_API_KEY

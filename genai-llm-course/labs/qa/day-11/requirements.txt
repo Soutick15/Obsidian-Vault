@@ -1,0 +1,11 @@
+# Day 11 — AI Test-Generation Assistant
+# Core lab runs on Python 3.11+ stdlib only.
+# Uncomment anthropic to use a real LLM (needs ANTHROPIC_API_KEY).
+
+# anthropic>=0.40.0
+
+# Optional: OpenAI provider (needs OPENAI_API_KEY)
+# openai>=1.30.0
+
+# Optional: load .env file automatically
+# python-dotenv>=1.0.0

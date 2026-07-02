@@ -1,0 +1,87 @@
+# promptfooconfig.yaml
+# Day 8 — HR Assistant eval suite using promptfoo
+# =================================================
+# REQUIRES AN API KEY — this file is documented reference material.
+#
+# Install:  npm install -g promptfoo
+# Set key:  export ANTHROPIC_API_KEY=sk-ant-...   (or OPENAI_API_KEY)
+# Run:      npx promptfoo eval --config labs/qa/day-08/promptfooconfig.yaml
+# Report:   npx promptfoo view
+#
+# Note: promptfoo joined OpenAI in 2025 but remains open-source and
+# provider-agnostic — swap the provider line to use any supported model.
+
+prompts:
+  - "{{question}}"
+
+providers:
+  - anthropic:claude-haiku-4-5 # change to openai:gpt-5-mini etc.
+
+tests:
+  # ------------------------------------------------------------------
+  # Q1 — PTO regression (maps to Seeded Issue #1)
+  # A real (non-mock) HR assistant should state 15 days for new employees.
+  # The not-contains assertion explicitly catches the hallucinated "20 days".
+  # ------------------------------------------------------------------
+  - description: "PTO days for new employees — regression check"
+    vars:
+      question: "How many PTO days do new employees get in their first two years?"
+    assert:
+      - type: contains
+        value: "15"
+      - type: not-contains
+        value: "20 days"
+
+  # ------------------------------------------------------------------
+  # Q2 — Parental leave
+  # ------------------------------------------------------------------
+  - description: "Non-birth parent parental leave"
+    vars:
+      question: "What is the parental leave policy for a non-birth parent?"
+    assert:
+      - type: contains
+        value: "parental leave"
+
+  # ------------------------------------------------------------------
+  # Q3 — Hiring process stages
+  # ------------------------------------------------------------------
+  - description: "Acme Corp hiring process stages"
+    vars:
+      question: "What are the stages of the hiring process at Acme Corp?"
+    assert:
+      - type: contains
+        value: "hiring"
+      - type: llm-rubric
+        value: "Response describes a structured, multi-stage hiring process"
+
+  # ------------------------------------------------------------------
+  # Q4 — Remote work days per week
+  # ------------------------------------------------------------------
+  - description: "Remote work days per week"
+    vars:
+      question: "How many days per week can employees work remotely?"
+    assert:
+      - type: contains
+        value: "remote"
+      - type: llm-rubric
+        value: "Response states a specific number of remote days per week"
+
+  # ------------------------------------------------------------------
+  # Q5 — 401(k) match
+  # ------------------------------------------------------------------
+  - description: "401k employer match"
+    vars:
+      question: "How much does Acme Corp match on 401(k) contributions?"
+    assert:
+      - type: contains
+        value: "401"
+
+  # ------------------------------------------------------------------
+  # Q6 — Home office stipend
+  # ------------------------------------------------------------------
+  - description: "Remote home office setup stipend"
+    vars:
+      question: "What is the home office setup stipend for new remote employees?"
+    assert:
+      - type: contains
+        value: "stipend"

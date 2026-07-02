@@ -1,0 +1,18 @@
+# Day 11 — LoRA Fine-Tuning Lab
+# No API key required — entirely local.
+# First run downloads sshleifer/tiny-gpt2 (~10 MB) from Hugging Face.
+#
+# Install: pip install -r requirements.txt
+
+# Core fine-tuning stack
+transformers>=4.40.0
+peft>=0.10.0
+datasets>=2.19.0  # used in the Colab/SFTTrainer training path; not imported in the CPU smoke solution
+torch>=2.1.0
+accelerate>=0.29.0
+
+# Optional: 4-bit quantization for QLoRA on GPU
+# bitsandbytes>=0.43.0   # requires CUDA; comment out for CPU-only installs
+
+# Utilities (likely already in your base environment)
+# python-dotenv>=1.0.0

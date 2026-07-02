@@ -1,0 +1,40 @@
+# Python artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+
+# Local environment and secrets — NEVER copy into image
+.env
+.env.*
+.venv/
+venv/
+
+# Version control
+.git/
+.gitignore
+
+# Development and test files
+tests/
+*.test.py
+*_test.py
+*.spec.py
+
+# Documentation
+*.md
+docs/
+
+# Editor and OS artifacts
+.DS_Store
+*.swp
+*.swo
+.idea/
+.vscode/
+
+# Large data that is explicitly COPY'd only where needed
+# (the corpus is copied selectively in the Dockerfile)
+capstone/
+labs/devops/day-07/
+setup/
+curriculum/

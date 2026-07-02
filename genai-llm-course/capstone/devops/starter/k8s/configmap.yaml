@@ -1,0 +1,25 @@
+# TODO: Define ConfigMap for the capstone AI service.
+#
+# Requirements (from project-brief.md and rubric.md):
+#   - name: ai-service-config
+#   - namespace: default
+#   - Include environment configuration keys:
+#       LLM_PROVIDER, LOG_LEVEL, CACHE_TTL_SECONDS, MAX_TOKENS
+#   - Do NOT store secrets here (API keys go in a Secret resource, not ConfigMap)
+#
+# Reference: labs/devops/day-08/configmap.yaml for a working example.
+#
+# Stub — replace TODO values with real values for your deployment.
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: ai-service-config          # TODO: adjust name if needed
+  namespace: default
+  labels:
+    app: ai-service                # TODO: match your Deployment's app label
+data:
+  LLM_PROVIDER: "TODO"            # e.g. "anthropic" or "openai"
+  LOG_LEVEL: "INFO"               # TODO: adjust for environment
+  CACHE_TTL_SECONDS: "300"        # TODO: tune based on your caching strategy
+  MAX_TOKENS: "1024"              # TODO: set based on your model and cost targets

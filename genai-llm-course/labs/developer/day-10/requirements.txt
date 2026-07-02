@@ -1,0 +1,12 @@
+# Day 10 lab dependencies
+# Core (required — run locally, no API key needed)
+chromadb>=0.4.24
+sentence-transformers>=2.7.0
+numpy>=1.26.0
+
+# .env support (optional)
+python-dotenv>=1.0.0
+
+# Provider SDKs (optional — lab runs in mock mode without these)
+# anthropic>=0.25.0
+# openai>=1.14.0

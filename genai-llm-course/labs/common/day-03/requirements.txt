@@ -1,0 +1,4 @@
+numpy>=1.24.0
+# Optional — only needed for real API calls (see README for usage)
+# anthropic>=0.28.0
+# openai>=1.30.0

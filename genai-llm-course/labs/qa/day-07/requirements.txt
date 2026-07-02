@@ -1,0 +1,7 @@
+# Day 7 Lab — Testing Non-Deterministic Systems
+# No API key required. No third-party ML libraries required.
+#
+# Production upgrade path (not needed for this lab):
+#   sentence-transformers>=2.2.0   # semantic similarity via dense embeddings
+#   pydantic>=2.0.0                # schema validation
+pytest>=7.0.0

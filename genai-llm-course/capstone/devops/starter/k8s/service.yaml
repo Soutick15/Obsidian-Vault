@@ -1,0 +1,16 @@
+# Kubernetes Service for Acme HR Knowledge Assistant
+apiVersion: v1
+kind: Service
+metadata:
+  name: acme-hr-assistant
+  labels:
+    app: acme-hr-assistant
+spec:
+  selector:
+    app: acme-hr-assistant
+  ports:
+    - name: http
+      protocol: TCP
+      port: 80
+      targetPort: 8000
+  type: ClusterIP  # TODO: change to LoadBalancer or use Ingress for external access

@@ -1,0 +1,8 @@
+# Day 8 — Evaluation Harnesses
+# Core harness: stdlib only (no pip packages needed)
+# pytest for running test files
+pytest>=7.0.0
+
+# Optional — install separately when you have an API key:
+# deepeval>=0.21.0     # pip install deepeval
+# promptfoo is a Node.js CLI: npm install -g promptfoo

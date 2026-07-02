@@ -1,0 +1,3 @@
+# Day 9 — Vector DB & Data Infrastructure Operations
+# No API key required. Chroma's default embedding runs fully local.
+chromadb>=0.4.24

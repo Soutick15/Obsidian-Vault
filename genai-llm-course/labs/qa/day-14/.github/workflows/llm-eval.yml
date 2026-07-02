@@ -1,0 +1,81 @@
+# ─────────────────────────────────────────────────────────────────────────────
+# LLM Eval Gate — GitHub Actions workflow
+#
+# Runs on every push to main and on every pull request.
+# If the eval gate exits with code 1 the job fails, the GitHub check turns red,
+# and merging is blocked (when branch protection requires this check to pass).
+#
+# Usage:
+#   1. Copy this file to your repo at .github/workflows/llm-eval.yml
+#   2. Commit and push — the workflow activates immediately.
+#   3. Adjust the --threshold flag below to match your quality bar.
+# ─────────────────────────────────────────────────────────────────────────────
+
+name: LLM Eval Gate
+
+on:
+  push:
+    branches:
+      - main          # Run on every commit merged to main
+  pull_request:       # Run on every PR (all branches)
+
+jobs:
+  eval-gate:
+    name: Run eval gate and enforce quality threshold
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Check out the repository ────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Set up Python 3.11 ──────────────────────────────────────────────
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # ── 3. Cache pip packages to speed up repeated runs ───────────────────
+      #    The cache key includes the hash of requirements.txt so it is
+      #    invalidated automatically whenever dependencies change.
+      - name: Cache pip packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
+      # ── 4. Install Python dependencies ─────────────────────────────────────
+      - name: Install dependencies
+        run: pip install -r labs/qa/day-14/requirements.txt
+
+      # ── 5. Run the eval gate ───────────────────────────────────────────────
+      #    The script exits 0 when score >= threshold and 1 otherwise.
+      #    GitHub Actions treats a non-zero exit code as a failed step,
+      #    which fails the job and blocks the PR check.
+      #
+      #    Adjust --threshold to set your quality bar (0.0 – 1.0).
+      #    Default in the script is 0.75; set it explicitly here so CI
+      #    config is the single source of truth for the threshold value.
+      - name: Run LLM eval gate
+        run: |
+          python labs/qa/day-14/solution.py --threshold 0.75
+
+      # ── 6. (Optional) Upload eval output as a CI artifact ─────────────────
+      #    Redirect stdout to a file so reviewers can inspect results without
+      #    digging through raw logs. The artifact is retained for 7 days.
+      #    To enable this step, replace the run command above with:
+      #
+      #      python labs/qa/day-14/solution.py --threshold 0.75 | tee eval-report.txt
+      #      exit ${PIPESTATUS[0]}   # preserve exit code through tee
+      #
+      #    Then uncomment the step below.
+      #
+      # - name: Upload eval report
+      #   if: always()              # upload even when the gate fails
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: eval-report
+      #     path: eval-report.txt
+      #     retention-days: 7

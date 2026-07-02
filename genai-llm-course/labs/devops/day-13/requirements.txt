@@ -1,0 +1,11 @@
+# Day 13 — Security & Governance: Secrets, Audit Logging & Gateway Guardrails
+#
+# All core tasks use Python stdlib only (hashlib, hmac, re, json, os,
+# datetime, pathlib, sys, dataclasses, uuid).
+# No API key required — the shared service mock runs with zero credentials.
+#
+# Optional packages (uncomment to install):
+# microsoft-presidio-analyzer>=2.2   # production PII detection & redaction
+# python-dotenv>=1.0                  # load .env files into os.environ
+# anthropic>=0.40                     # real LLM path (requires ANTHROPIC_API_KEY)
+# openai>=1.30                        # real LLM path (requires OPENAI_API_KEY)

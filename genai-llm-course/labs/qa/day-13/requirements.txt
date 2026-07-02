@@ -1,0 +1,5 @@
+# Day 13 — Adversarial Test Suite
+# Core suite: Python stdlib only (no install needed)
+# Optional: pytest for running starter/solution as a test file
+
+pytest>=7.4.0   # optional — suite also runs as a plain script

@@ -1,0 +1,67 @@
+# HorizontalPodAutoscaler — scales the Deployment replica count based on metrics.
+#
+# This HPA uses built-in CPU and memory utilization metrics (relative to requests).
+# In production, prefer custom metrics (GPU utilization, request queue depth,
+# tokens/s) via KEDA or Prometheus Adapter — CPU is often a poor signal for
+# GPU-accelerated LLM inference.
+#
+# scaleTargetRef.name must match metadata.name in deployment.yaml.
+#
+# Kubernetes docs: https://kubernetes.io/docs/tasks/run-application/horizontal-pod-autoscale/
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: hr-assistant-hpa
+  namespace: default
+  labels:
+    app: hr-assistant
+spec:
+  # --- Target -----------------------------------------------------------
+  # The Deployment to scale. name must match the Deployment's metadata.name.
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: hr-assistant
+
+  # --- Replica bounds ---------------------------------------------------
+  # minReplicas: never scale below this. Keep >=1 to avoid cold-start latency
+  #              when the first request arrives after a scale-to-zero event.
+  # maxReplicas: cost control ceiling.
+  minReplicas: 1
+  maxReplicas: 8
+
+  # --- Scaling metrics --------------------------------------------------
+  metrics:
+    # Scale out when average CPU across pods exceeds 60% of their requests.
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 60
+
+    # Scale out when average memory across pods exceeds 75% of their requests.
+    # Helps catch cases where memory grows with concurrent request KV caches.
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 75
+
+  # --- Scaling behaviour ------------------------------------------------
+  # scaleDown.stabilizationWindowSeconds: wait this long after metric drops
+  # before scaling down. Prevents rapid flapping.
+  behavior:
+    scaleDown:
+      stabilizationWindowSeconds: 120
+      policies:
+        - type: Pods
+          value: 1
+          periodSeconds: 60
+    scaleUp:
+      stabilizationWindowSeconds: 30
+      policies:
+        - type: Pods
+          value: 2
+          periodSeconds: 30
