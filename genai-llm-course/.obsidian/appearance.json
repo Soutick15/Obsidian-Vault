@@ -1,1 +1,6 @@
-{}
+{
+  "textFontFamily": "Comic Sans MS",
+  "interfaceFontFamily": "Comic Sans MS",
+  "theme": "moonstone",
+  "baseFontSize": 18
+}

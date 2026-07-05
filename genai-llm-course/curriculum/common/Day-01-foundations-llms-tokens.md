@@ -79,6 +79,7 @@ P(next_token | token_1, token_2, ..., token_n)  →  sample one token  →  appe
 
 That's it. Everything else — answering questions, writing code, following instructions — is an emergent behaviour of training that distribution on enormous, diverse text.
 
+Generative : Generate next sequence. 
 #### What this implies for developers
 
 | Implication               | Why it matters                                                                                                                                                                     |

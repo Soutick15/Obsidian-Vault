@@ -23,6 +23,7 @@ pip install -r labs/common/day-02/requirements.txt
 ## Running the Lab
 
 **Starter (fill in the TODOs):**
+
 ```bash
 python labs/common/day-02/starter.py
 ```

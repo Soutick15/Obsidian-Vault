@@ -20,9 +20,12 @@ Understanding where a model comes from helps you choose the right one and set re
 
 #### Phase 1: Pretraining
 
-The model is trained on a massive corpus (trillions of tokens from the web, books, code) with a simple objective: **predict the next token**. This phase is computationally expensive (weeks on thousands of GPUs) and produces a *base model* — a powerful pattern-matcher that can continue any text, but is not yet useful as an assistant.
+The model is trained on a massive corpus (trillions of tokens from the web, books, code) with a simple objective: **predict the next token**. 
+
+This phase is computationally expensive (It takes weeks on thousands of GPUs resources) and produces a *base model* — a powerful pattern-matcher that can continue any text, but is not yet useful as an assistant.
 
 Key intuitions:
+
 - The model learns language structure, world knowledge, and reasoning patterns purely from statistical co-occurrence.
 - It has no notion of "helpful" or "harmful" at this stage — it will complete a sentence about bomb-making just as readily as a recipe.
 - Context window size and tokenisation scheme are fixed here.
@@ -37,7 +40,7 @@ After SFT, the model is usable but still imperfectly calibrated: it may be verbo
 
 **Reinforcement Learning from Human Feedback (RLHF):** Human raters compare pairs of model outputs and label which is better. A *reward model* is trained on these preferences. The LLM is then fine-tuned with reinforcement learning to maximise the reward model's score.
 
-**Direct Preference Optimization (DPO):** A more recent and simpler alternative — skips the separate reward model and directly optimises the policy using preference pairs. Most current frontier models use some variant of DPO or hybrid approaches.
+**Direct Preference Optimization (DPO):** A more recent and simpler alternative — It skips the separate reward model and directly optimises the policy using preference pairs. Most current frontier models use some variant of DPO or hybrid approaches.
 
 **Intuition:** RLHF/DPO teaches the model to be helpful, harmless, and honest. It is also where much of the model's "personality" is shaped.
 
@@ -230,7 +233,7 @@ See `labs/common/day-03/README.md` for full details and expected output.
 <details>
 <summary>Show answer</summary>
 
-The base model is trained only to predict the next token — it will complete any text, including harmful ones, and has no concept of instruction-following format. SFT teaches the model to behave as an assistant by training on (instruction, ideal-response) pairs, giving it the conversational format and basic instruction adherence needed for practical use.
+The base model is trained only to predict the next token — it will complete any text, including harmful ones, and has no concept of instruction-following format. SFT teaches the model to behave as an assistant by training on (instruction + ideal-response) pairs, giving it the conversational format and basic instruction adherence needed for practical use.
 
 </details>
 
@@ -257,7 +260,11 @@ Top-p keeps the smallest set of tokens whose cumulative probability reaches `p`,
 <details>
 <summary>Show answer</summary>
 
-`frequency_penalty` and `presence_penalty`. Frequency penalty reduces a token's probability proportionally to how many times it has already appeared (scales with count). Presence penalty applies a flat penalty to any token that has appeared at least once (binary — appeared or not). Frequency penalty is better for reducing repeated phrases; presence penalty is better for forcing topic diversity.
+- `frequency_penalty` : Frequency penalty reduces a token's probability proportionally to how many times it has already appeared (scales with count).
+
+- `presence_penalty`:  Presence penalty applies a flat penalty to any token that has appeared at least once (binary — appeared or not).
+
+- Frequency penalty is better for reducing repeated phrases; presence penalty is better for forcing topic diversity.
 
 </details>
 
@@ -266,7 +273,9 @@ Top-p keeps the smallest set of tokens whose cumulative probability reaches `p`,
 <details>
 <summary>Show answer</summary>
 
-(1) **Batch API** — async processing at ~50% discount, ideal for non-latency-sensitive bulk workloads. (2) **Prompt caching** — the system prompt and schema instructions are identical across all 500K calls; caching the common prefix dramatically reduces input token costs. Also, choose the smallest model that achieves acceptable quality (Haiku class).
+(1) **Batch API** — async processing at ~50% discount, ideal for non-latency-sensitive bulk workloads. 
+
+(2) **Prompt caching** — the system prompt and schema instructions are identical across all 500K calls; caching the common prefix dramatically reduces input token costs. Also, choose the smallest model that achieves acceptable quality (Haiku class).
 
 </details>
 
@@ -293,7 +302,9 @@ An open-weight model (e.g. Llama 3 70B or Mistral Large) self-hosted in their pr
 <details>
 <summary>Show answer</summary>
 
-Input tokens can all be processed in parallel in a single forward pass (the attention mechanism processes the whole sequence simultaneously). Output tokens must each be generated sequentially — one forward pass per output token. This makes output generation more compute-intensive per token, hence the higher price.
+Input tokens can all be processed in parallel in a single forward pass (the attention mechanism processes the whole sequence simultaneously). 
+
+Output tokens must each be generated sequentially — one forward pass per output token. This makes output generation more compute-intensive per token, hence the higher price.
 
 </details>
 
@@ -326,7 +337,15 @@ Increase `temperature` (e.g. from 0.7 to 1.0–1.2) and consider widening `top_p
 <details>
 <summary>Show answer</summary>
 
-Four levers: (1) **Model tier** — use the smallest model that meets quality requirements; a 10× cost difference between small and large models is common. (2) **Prompt efficiency** — audit system prompt length, reduce redundant few-shot examples, tighten context in RAG pipelines. (3) **Caching** — both Anthropic and OpenAI offer prompt prefix caching; repeated system prompts cost a fraction of full price. (4) **Batching** — for non-real-time workloads, batch APIs offer ~50% discounts. Also set `max_tokens` tightly and count tokens before sending with `tiktoken` / `anthropic.count_tokens` to forecast cost before scaling.
+Four levers: 
+
+(1) **Model tier** — use the smallest model that meets quality requirements; a 10× cost difference between small and large models is common. 
+
+(2) **Prompt efficiency** — audit system prompt length, reduce redundant few-shot examples, tighten context in RAG pipelines. 
+
+(3) **Caching** — both Anthropic and OpenAI offer prompt prefix caching; repeated system prompts cost a fraction of full price. 
+
+(4) **Batching** — for non-real-time workloads, batch APIs offer ~50% discounts. Also set `max_tokens` tightly and count tokens before sending with `tiktoken` / `anthropic.count_tokens` to forecast cost before scaling.
 
 </details>
 
@@ -353,7 +372,17 @@ RLHF — Reinforcement Learning from Human Feedback — is the process that turn
 <details>
 <summary>Show answer</summary>
 
-I evaluate five dimensions: (1) **Capability** — benchmark on a representative sample of the actual task; leaderboard rankings don't always translate to your specific domain. (2) **Cost** — estimate monthly token volume and compare per-token pricing vs. hosting cost. (3) **Latency** — check time-to-first-token and throughput SLAs against UX requirements. (4) **Context window** — if the task needs very long contexts (e.g. full document analysis), confirm the model handles it reliably, not just in theory. (5) **Data compliance** — if there are data residency or privacy requirements, open-weight self-hosted may be the only option. I typically prototype with a hosted model (cheapest iteration) and revisit hosting if cost or compliance forces it.
+I evaluate five dimensions: 
+
+(1) **Capability** — benchmark on a representative sample of the actual task; leaderboard rankings don't always translate to your specific domain. 
+
+(2) **Cost** — estimate monthly token volume and compare per-token pricing vs. hosting cost. 
+
+(3) **Latency** — check time-to-first-token and throughput SLAs against UX requirements.
+
+(4) **Context window** — if the task needs very long contexts (e.g. full document analysis), confirm the model handles it reliably, not just in theory. 
+
+(5) **Data compliance** — if there are data residency or privacy requirements, open-weight self-hosted may be the only option. I typically prototype with a hosted model (cheapest iteration) and revisit hosting if cost or compliance forces it.
 
 </details>
 

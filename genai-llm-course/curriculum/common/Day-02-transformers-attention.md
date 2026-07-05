@@ -15,12 +15,19 @@ By the end of Day 2 you will be able to:
 5. Explain the O(n²) cost of attention, why it limits context windows, and name at least two approaches used to extend them.
 
 ---
-
 ## 2. Concept Reading
 
 ### 2.1 The Big Picture — From Tokens to Logits
 
-On Day 1 you saw that text becomes tokens and tokens become embeddings. The transformer takes those embeddings and transforms them through a stack of identical blocks, ultimately producing a probability distribution over the vocabulary at each position.
+GPT - Generative pre-trained transformer. 
+
+Transfomet is a geneative in nature based on pre
+
+On Day 1 you saw that text becomes tokens and tokens become embeddings. 
+
+
+
+The transformer takes those embeddings and transforms them through a stack of identical blocks, ultimately producing a probability distribution over the vocabulary at each position.
 
 ```
 Input text
@@ -57,33 +64,59 @@ The model is "just" a function: given a sequence of token vectors, produce a new
 - `N`: number of stacked blocks (e.g., 12 for GPT-2 base).
 - `d_ff`: inner dimension of the feed-forward layer (typically `4 × d_model`).
 
+
+
 ---
 
-### 2.2 Self-Attention — The Core Idea
+### 2.2 `Self-Attention` — The Core Idea
 
-Imagine reading the sentence: *"The animal didn't cross the street because **it** was too tired."*
 
-To resolve what "it" refers to, you mentally scan back to "animal". Attention is the mechanism that lets the model do this — every token can directly look at every other token in one pass, with learned weights determining how much attention to pay.
+Imagine you read this sentence: *"The animal didn't cross the street because **it** was too tired."* Now to resolve what "it" refers to, you mentally scan back to "animal". 
 
-#### Query, Key, Value — an analogy
+Before Transformers Computers couldn't understand this relation between words. Earlier models (RNNs) had to remember everything sequentially. This problem is solved by self-attention
 
-Think of a library:
+# Self-Attention
 
-- **Query (Q):** what you're looking for ("I want books about neural networks").
-- **Key (K):** the label on each book's spine ("neural networks", "recipes", "history").
-- **Value (V):** the actual content of the book.
+Self-Attention is the mechanism used by LLM models to figure out how words relate to each other in a sentence -- every token can directly look at every other token in one pass, with learned weights determining how much attention to pay.
+
+To do this mathematically, the Transformer assigns three vectors Query, Key, Value (Q, K, V) to every single word . Think of it like a **Library system**:
+#### Query, Key, Value (Q, K, V) — an analogy
+
+Think of a library analogy:
+
+- **Query (Q):** what word you're looking for e.g., The word "it".  In library analogy think like  ("I want books about neural networks"). 
+
+- **Key (K):**  Based on the information the model have, it creates a word's _identity label_ e.g., The word "dog" says: _"I am an animal"_. In library analogy think like the label on each book's cover ("neural networks", "recipes", "history"). 
+
+- **Value (V):** Based on the Query → the model Compare with all Keys  → Generate scores  →Pick important Values. The value is the actual _meaning_ of the word.  In library analogy : The actual content of the book you were looking for. 
 
 You compute a relevance score between your query and every key, convert those scores to weights (softmax), and return a weighted blend of the values.
 
-In transformer self-attention, every token simultaneously plays all three roles — it generates its own Q, K, and V vectors by multiplying its embedding by three learned weight matrices (W_Q, W_K, W_V).
+In transformer self-attention : Every token simultaneously plays all three roles — it generates its own Q, K, and V vectors by multiplying its embedding by three learned weight matrices (W_Q, W_K, W_V).
 
+**The Result:** The model matches the **Query** with the right **Key**, and blends the **Values** together. That's how the AI knows "it" means "dog."
+
+Every word first becomes an embedding.
+
+```
+The → Embedding → (Query + Key + Value) 
+```
+
+```
+Cat → Embedding → (Query + Key + Value) 
+```
+
+
+---
+
+Enough theory, now we will see how the model actually processes this step-by-step:
 #### The Formula
 
 ```
 Attention(Q, K, V) = softmax( Q · Kᵀ / √d_k ) · V
 ```
 
-Step by step for a sequence of length `n` with key/query dimension `d_k`:
+Step by step for a sequence of length `n` with key / query dimension `d_k` :
 
 ```
 1. Linear projections:
@@ -139,9 +172,14 @@ Without the `/ √d_k` divisor, dot products grow with `d_k`. For large d_k (e.g
 
 ---
 
-### 2.4 Multi-Head Attention
+### 2.4 `Multi-Head` Attention
 
-One attention head can only express one type of relationship at a time. Multi-head attention runs `h` independent attention operations in parallel, then concatenates and projects:
+
+If you only have one attention mechanism (a single "head"), The  one attention head can only focus on one relationship at a time. It might notice that "it" connects to "animal," but miss that "animal" is connected to "cross" (the action).
+
+But a single word can have multiple relationships at once. For example one head reading a sentence, another head focus on grammar, another notices emotion, all heads working simultaneously.
+
+Multi-head attention runs `h` independent attention operations in parallel, then concatenates and projects:
 
 ```
 head_i = Attention(Q·W_Qi, K·W_Ki, V·W_Vi)
@@ -150,7 +188,8 @@ MultiHead(Q, K, V) = Concat(head_1, ..., head_h) · W_O
 ```
 
 **Why bother?**
-Different heads learn to track different relationships simultaneously:
+
+Multiple "heads" mean multiple heads looking at the sentence to track different relationships simultaneously:
 - Head 1 might track syntactic dependencies (subject → verb).
 - Head 2 might track coreference ("it" → "animal").
 - Head 3 might track proximity (adjacent words).
@@ -163,9 +202,15 @@ GPT-2 base uses `h=12` heads; GPT-3 uses `h=96` heads.
 
 ### 2.5 Positional Encoding — Injecting Order
 
-Self-attention is inherently permutation-invariant: shuffle the input tokens and the dot-product scores are the same (just reordered). That's a problem — word order matters.
 
-The fix is to add a positional signal to each token's embedding before the first block.
+Without position, Self-attention treats a sentence like a random words (token). The model just sees the words even though it has different meaning.
+
+
+Self-attention is inherently permutation-invariant : shuffle the input tokens and the dot-product scores are the same (just reordered). For example :
+
+If you shuffle the words _"Dog bites man"_ to _"Man bites dog"_, even though meaning changes, a pure attention layer sees the exact same mathematical relationships. It doesn't inherently understand word order. That's a problem — word order can change the meaning. 
+
+The fix is to add a positional signal to each token's embedding before the first block. Positional Encoding Tells the model the order of tokens
 
 **Original (sinusoidal) positional encoding:**
 ```
@@ -184,6 +229,7 @@ Here `i` ranges from 0 to d_model/2 − 1, producing d_model sinusoidal values p
 
 ### 2.6 The Feed-Forward Network (FFN)
 
+Attention collects information and Context. FFN process it. 
 After attention, each position goes through an identical two-layer MLP independently:
 
 ```
@@ -211,19 +257,12 @@ x = LayerNorm(x + SubLayer(x))
 
 The transformer architecture can be wired in three different ways:
 
-```
-ENCODER-ONLY                ENCODER-DECODER             DECODER-ONLY
-(BERT, RoBERTa)             (T5, mT5, BART)             (GPT, Claude, Llama, Mistral)
 
-Bidirectional attention      Encoder: bidirectional       Causal/masked attention
-(every token sees all)       Decoder: causal + cross-att  (each token sees only past)
-
-Best for:                    Best for:                    Best for:
-- Classification             - Translation                - Text generation
-- NER / token labelling      - Summarisation              - Chat / instruction following
-- Sentence embeddings        - Structured generation      - Code generation
-- Semantic search            - Seq-to-seq tasks           - Few-shot reasoning
-```
+| ENCODER-ONLY                                                                                            | DECODER-ONLY                                                                                                                                   | ENCODER-DECODER                                                                                                                    |
+| ------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| Bidirectional attention -  every token sees all<br><br>                                                 | Causal/masked attention - each token sees only past.<br><br>While predicting the next word it can't see future words, can only see past words. | Encoder: bidirectional` `Decoder: causal + cross-att<br><br>One side reads and one side writes                                     |
+| Best for: <br>- classification<br>- NER / token labelling<br>- Sentence embeddings<br>- Semantic search | Best for :<br>- Text generation<br>- Chat / instruction following<br>- Code generation<br>- Few-shot reasoning                                 | Best for:<br>- Translation (English - Bengali)<br>- Summarisation of long article<br>- Structured generation<br>- Seq-to-seq tasks |
+| Example - BERT, RoBERTa                                                                                 | Example - GPT, Claude, Llama, Mistral                                                                                                          | Example - T5, mT5, BART                                                                                                            |
 
 **Causal masking (decoder-only):** During training and inference, position `i` cannot attend to position `j > i`. This is enforced by setting those attention scores to `-inf` before softmax. This is what allows autoregressive generation — predict one token at a time.
 
@@ -238,21 +277,26 @@ Best for:                    Best for:                    Best for:
 
 ### 2.9 Why Context Windows Are Limited — O(n²) Attention
 
+Attention requires **every** token(word) to look at **every** other token. It makes the long contexts expensive. 
+
+**The problem:** If you double the amount of text you feed the AI, the computer has to do **four times** the work. The number of comparisons grows quadratically (**O(n²)**).
+
 The attention score matrix has shape `(n, n)` — one score per pair of tokens. For a sequence of length `n`:
 
 - **Memory:** O(n²) — a 128K-token context needs 128,000 × 128,000 entries.
 - **Compute:** O(n²) — every pair must be computed.
 
-At n=128,000 tokens, that's ~16 billion scores per head per layer. Even with efficient implementations it's expensive.
+At n = 128,000 tokens, that's ~16 billion scores per head per layer. Even with efficient implementations it's expensive.
 
-**Techniques to extend context:**
-| Technique | Idea |
-|-----------|------|
-| **Sliding window / local attention** (Longformer, Mistral) | Each token only attends to a local window, not all others. O(n × window). |
-| **Sparse attention** (BigBird) | Combine local, global (CLS-like), and random attention patterns. |
-| **FlashAttention** | Algorithmic rewrite that is still O(n²) but dramatically reduces memory by computing in tiles — fits 4–8× longer contexts in the same GPU RAM. |
-| **RoPE + fine-tuning on longer seqs** (LLaMA 2 Long, GPT-4 Turbo) | Extend position encoding to longer sequences and fine-tune. |
-| **State-space models (Mamba)** | Different architecture, O(n) scaling, but trade-offs vs attention quality. |
+To reduce this cost & extend context, researchers use these below techniques : 
+
+| Technique                                                         | Idea                                                                                                                                           |
+| ----------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Sliding window / local attention** (Longformer, Mistral)        | Each token only looks at nearby tokens of its local window, not all others. O(n × window).                                                     |
+| **Sparse attention** (BigBird)                                    | Combine local, global (CLS-like), and random attention patterns.<br>Each token looks at only a selected subset of tokens.                      |
+| **FlashAttention**                                                | Algorithmic rewrite that is still O(n²) but dramatically reduces memory by computing in tiles — fits 4–8× longer contexts in the same GPU RAM. |
+| **RoPE + fine-tuning on longer seqs** (LLaMA 2 Long, GPT-4 Turbo) | Extend position encoding to longer sequences and fine-tune.                                                                                    |
+| **State-space models (Mamba)**                                    | Different architecture, O(n) scaling, but trade-offs vs attention quality.                                                                     |
 
 ---
 
@@ -297,7 +341,10 @@ See `labs/common/day-02/README.md` for full instructions and expected output.
 <details>
 <summary>Show answer</summary>
 
-Query (Q) — what this token is looking for; Key (K) — what this token advertises; Value (V) — the actual content this token contributes. The score between token i and j is `Qᵢ · Kⱼ`, and token i's output is a weighted sum of all Vⱼ values.
+**Query (Q)** — what this token is looking for.
+Key (K) — Based on the information the model have, it creates a word's identity label.
+Value (V) — the actual content this token contributes. 
+The score between token i and j is `Qᵢ · Kⱼ`, and token i's output is a weighted sum of all Vⱼ values.
 
 </details>
 
@@ -324,7 +371,10 @@ Causal masking sets the attention score to -∞ (→ weight ≈ 0 after softmax)
 <details>
 <summary>Show answer</summary>
 
-Running h independent attention operations in parallel, each with its own W_Q, W_K, W_V projections, then concatenating and projecting the outputs. Each head can specialise in a different type of relationship (syntax, coreference, proximity). Total compute is similar to one large head (dimensions are split), but the model can express multiple relationship types simultaneously.
+- Multi-head attention runs `h` independent attention operations in parallel, then concatenates and projects.
+- each head has its own W_Q, W_K, W_V projections, then concatenating and projecting the outputs. 
+- Each head can specialise in a different type of relationship (syntax, coreference, proximity). Total compute is similar to one large head (dimensions are split), but the model can express multiple relationship types simultaneously. 
+
 
 </details>
 
@@ -351,7 +401,11 @@ O(n²) in both memory and compute. Doubling the context length quadruples the at
 <details>
 <summary>Show answer</summary>
 
-Self-attention is permutation-invariant — the same tokens in different orders would produce identical scores without positional information. Positional encoding injects order. Modern approaches: RoPE (Rotary Position Embeddings, used in LLaMA/Mistral) and ALiBi (position bias added to attention scores, used in MPT). Learned positional embeddings (GPT-2 style) are also common.
+Self-attention is permutation-invariant — the same tokens in different orders would produce identical scores without positional information. Positional encoding injects order. 
+
+Modern approaches: 
+- RoPE (Rotary Position Embeddings, used in LLaMA/Mistral) 
+- ALiBi (position bias added to attention scores, used in MPT). Learned positional embeddings (GPT-2 style) are also common.
 
 </details>
 
@@ -399,7 +453,13 @@ BERT-style encoders use bidirectional attention — each token can attend to all
 <details>
 <summary>Show answer</summary>
 
-Each token projects its embedding into three vectors — Q, K, V. Q represents what the token is looking for; K represents what it has to offer as context; V is the actual content it contributes. Relevance scores are computed as dot products between Q and all Ks, scaled by √d_k and softmaxed into weights. The token's new representation is then a weighted sum of all Vs. Intuitively: every word can 'ask a question' (Q) and 'scan the room' for relevant answers (K), then blend the relevant information (V). This lets the model resolve ambiguities like pronouns, long-range syntactic dependencies, and factual associations without fixed-size sliding windows.
+Each token projects its embedding into three vectors — Q, K, V. 
+
+Q represents what the token is looking for; 
+K represents what it has to offer as context; 
+V is the actual content it contributes. 
+
+Relevance scores are computed as dot products between Q and all Ks, scaled by √d_k and softmaxed into weights. The token's new representation is then a weighted sum of all Vs. Intuitively: every word can 'ask a question' (Q) and 'scan the room' for relevant answers (K), then blend the relevant information (V). This lets the model resolve ambiguities like pronouns, long-range syntactic dependencies, and factual associations without fixed-size sliding windows.
 
 </details>
 
@@ -516,3 +576,22 @@ BERT-large (or a smaller distilled variant like DistilBERT). For classification 
 6. **O(n²) is the fundamental constraint.** It is why context windows are bounded, why long documents must be chunked for RAG, and why FlashAttention and sparse attention techniques were invented.
 
 7. **FFN layers are not filler.** They store factual associations and account for most model parameters — the attention layer gathers context; the FFN processes and applies knowledge.
+
+
+| Concept              | Easy Meaning                                                                         |
+| -------------------- | ------------------------------------------------------------------------------------ |
+| Token                | A word or part of a word                                                             |
+| Embedding            | Numeric representation of a token                                                    |
+| Self-Attention       | Every token looks at other relevant tokens in the same sequence                      |
+| Query (Q)            | What this token is looking for                                                       |
+| Key (K)              | What this token offers to others                                                     |
+| Value (V)            | The actual information contributed by the token                                      |
+| Multi-Head Attention | Many attention mechanisms working in parallel, each learning different relationships |
+| Positional Encoding  | Tells the model the order of tokens                                                  |
+| FFN                  | Processes each token after attention has gathered context                            |
+| Residual Connection  | Adds the original input back to help deep networks train                             |
+| Layer Normalization  | Stabilizes training by normalizing activations                                       |
+| Encoder              | Best for understanding text (classification, embeddings, search)                     |
+| Decoder              | Best for generating text one token at a time                                         |
+| Encoder-Decoder      | Best for tasks with separate input and output (translation, summarization)           |
+| O(n²) Attention      | Every token compares with every other token, making long contexts expensive          |
