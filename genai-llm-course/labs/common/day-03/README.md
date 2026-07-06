@@ -9,7 +9,6 @@ Make LLM decoding parameters tangible through two exercises:
 3. **Model selection table** — prints a comparison across 11 model tiers on 5 practical dimensions.
 
 ---
-
 ## Setup
 
 ```bash

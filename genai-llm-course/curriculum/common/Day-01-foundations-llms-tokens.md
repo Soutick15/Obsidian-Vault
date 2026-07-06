@@ -19,7 +19,9 @@ By the end of Day 1 you will be able to:
 
 ## 2. Concept Reading
 
-### 2.1 The Nesting Hierarchy: AI → ML → DL → GenAI → LLM
+### 2.1 The Nesting Hierarchy from broadest to narrowest: 
+
+AI → ML → DL → GenAI → LLM
 
 Software developers often hear these terms used interchangeably. They are not the same. Think of them as concentric circles:
 
@@ -41,8 +43,8 @@ Software developers often hear these terms used interchangeably. They are not th
 │  │  │                                              │  │  │
 │  │  │  ┌────────────────────────────────────────┐  │  │  │
 │  │  │  │  Generative AI (GenAI)                 │  │  │  │
-│  │  │  │  DL models that *generate* new content  │  │  │  │
-│  │  │  │  (text, images, audio, code, video)     │  │  │  │
+│  │  │  │  DL models that *generate* new content │  │  │  │
+│  │  │  │  (text, images, audio, code, video)    │  │  │  │
 │  │  │  │                                        │  │  │  │
 │  │  │  │  ┌──────────────────────────────────┐  │  │  │  │
 │  │  │  │  │  LLM                             │  │  │  │  │
@@ -67,9 +69,13 @@ Software developers often hear these terms used interchangeably. They are not th
 
 ---
 
-### 2.2 What an LLM Actually Is
+### 2.2 What is an LLM (Large Language Model)
 
-**One-sentence definition:** An LLM is a probability distribution over the next token given all previous tokens.
+An LLM is a probability distribution over the next token given all previous sequence of tokens so far. This process is repeated token-by-token until a stop condition.
+
+An LLM is an AI model trained on massive amounts of text data. It learns patterns in language and can understand and generate human-like text. 
+
+Instead of looking up answers in a database, it predicts the most likely next token based on the input and the knowledge it learned during training. LLMs are used for tasks like question answering, code generation, summarization, translation, and conversational AI.
 
 At every step the model does:
 
@@ -79,7 +85,8 @@ P(next_token | token_1, token_2, ..., token_n)  →  sample one token  →  appe
 
 That's it. Everything else — answering questions, writing code, following instructions — is an emergent behaviour of training that distribution on enormous, diverse text.
 
-Generative : Generate next sequence. 
+Given the sequence of tokens seen so far, the model outputs a probability distribution over every possible next token, then samples (or argmax-selects) one. 
+
 #### What this implies for developers
 
 | Implication               | Why it matters                                                                                                                                                                     |
@@ -90,35 +97,73 @@ Generative : Generate next sequence.
 | **Patterns, not logic**   | LLMs are very good at mimicking the *form* of reasoning they saw in training data. They are not running a symbolic solver.                                                         |
 | **Context is everything** | The model only sees what you put in the prompt. Richer context = better output.                                                                                                    |
 
-#### What LLMs can and cannot do
-
-```
-CAN DO well                          CANNOT DO reliably
-────────────────────────────────     ────────────────────────────────────
-Summarisation & extraction           Precise arithmetic (unless tool-use)
-Paraphrasing & rewriting             Real-time / up-to-date information
-Code generation & explanation        Deterministic exact-match logic
-Instruction following (with care)    Count characters/tokens in own output
-Language translation                 Access external URLs / APIs (without tools)
-Chain-of-thought reasoning           Guarantee factual correctness
-Classification & sentiment           Recall every training fact accurately
-```
-
 ---
 
-### 2.3 Tokens & Tokenisation
+#### What LLMs can and cannot do
 
-#### What is a token?
+| CAN DO well                       | CANNOT DO reliably                          |
+| --------------------------------- | ------------------------------------------- |
+| Summarisation & extraction        | Precise arithmetic (unless tool-use)        |
+| Paraphrasing & rewriting          | Real-time / up-to-date information          |
+| Code generation & explanation     | Deterministic exact-match logic             |
+| Instruction following (with care) | Count characters/tokens in own output       |
+| Language translation              | Access external URLs / APIs (without tools) |
+| Chain-of-thought reasoning        | Guarantee factual correctness               |
+| Classification & sentiment        | Recall every training fact accurately<br>   |
 
-A **token** is the basic unit a model processes — not a character, not a word. Modern LLMs use sub-word tokenisers.
+**"What are LLM hallucinations and how do you mitigate them?"**
 
-Rule of thumb (English text):
+Hallucinations are when an LLM outputs fluent, confident-sounding content that is factually incorrect or entirely fabricated. They arise because the model is optimising for probable next tokens, not for factual accuracy. 
+
+Common mitigations: 
+(1) RAG — ground the model's answer in retrieved, verified documents; 
+(2) tool use — let the model call APIs or databases for facts rather than recalling from parameters; 
+(3) output validation — use structured output schemas and post-process/verify critical fields; 
+(4) chain-of-thought prompting — asking the model to reason step-by-step reduces but does not eliminate hallucinations; 
+(5) human-in-the-loop review for high-stakes outputs.
+
+
+---
+### 2.3 Tokens & Tokenisation. Why Token matters for cost estimation?
+
+When we type any prompt in human readable language like English, LLM doesn't understand this language. It first breaks the sentence into smaller units called Token (tokens) that models can process.
+
+#### 2.3.0 What is a token?
+
+>A `token` is the smallest unit of text that an LLM model processes — not a character, not a word. Modern LLMs use sub-word tokenisers.
+>
+>A token can be : A whole word, Part of a word, A punctuation mark, A number, A symbol.
 
 ```
+Text → Tokenizer → Tokens  
+```
+#### 2.3.1 Tokenisation  
+
+>Tokenisation is simply the process of breaking text into token that models can process. 
+>
+>Tokenisation is handled by an algorithm like BPE (Byte-Pair Encoding) that merges common byte sequences into single tokens. 
+>
+>As a rule of thumb, one token ≈ 4 English characters or 0.75 words. 
+>
+>Cost and context limits are both measured in tokens, so understanding tokenisation lets you estimate API cost, check whether a document fits in the context window, and optimise prompts for efficiency.
+>
+>Non-English text, code, or rare words cost more tokens per character.
+
+
+Rule of thumb (English text): 
+
+```
+
+(character / 4) ≈ token
+
 1 token ≈ 4 characters  ≈  0.75 words
+
+80 tokens ≈ 320 characters 
+
 ```
 
-Examples with GPT-style BPE:
+Examples with GPT-style BPE: Tokenizer breaks text into tokens. Or internally it may even assign token IDs:
+
 ```
 "Hello"          → ["Hello"]                          1 token
 "Hello, world!"  → ["Hello", ",", " world", "!"]      4 tokens
@@ -126,9 +171,22 @@ Examples with GPT-style BPE:
 "2024-06-17"     → ["2024", "-", "06", "-", "17"]     5 tokens
 ```
 
-Non-English text, code, or rare words cost more tokens per character.
+Or internally it may even assign token IDs:
 
-#### Byte-Pair Encoding (BPE) — intuition
+```
+"Hello"  → 512
+"world"  → 981
+```
+
+
+Different LLM models have different tokenisers.  They do not Tokenise the Same Way. For example, lets take the word : "unbelievable"
+- One model may split it into : `["un", "believable"]`
+- Another model may split it into : `["un", "believ", "able"]` both are correct.
+
+Tokenisation is Useful, Suppose the model has never seen as particular word before, so it can split it into smaller chunks which it already knows those smaller pieces. So it can understand the new word.
+
+---
+#### 2.3.2 Byte-Pair Encoding (BPE) — intuition
 
 BPE builds a vocabulary by iteratively merging the most frequent adjacent byte pairs in the training corpus:
 
@@ -147,63 +205,151 @@ After N merges: common words → single tokens
 - **Context limits** are measured in tokens. Knowing `~4 chars/token` lets you estimate fit.
 - **Prompt design** — avoid excessive punctuation, whitespace, or non-standard characters; they inflate token counts.
 
-#### Context Window
 
-The **context window** is the maximum number of tokens a model can process in a single forward pass. It includes both **input** (your prompt + conversation history) and **output** (the model's response).
+**Q8. "How does BPE tokenisation handle a word it has never seen before?"**
+
+BPE cannot produce a single token for an unseen word because that word was never frequent enough in training to get its own merged entry in the vocabulary. Instead, BPE falls back to smaller sub-word pieces — potentially down to individual bytes or characters — that are always in the vocabulary. So an invented word like "grokkinomics" might be tokenised as ["gr", "ok", "kin", "om", "ics"], costing five tokens instead of one. This graceful degradation means BPE never produces an unknown-token error, but rare words and non-English text cost more tokens per unit of meaning.
+
+---
+#### 2.3.3 Context Window
+
+The **context window** is the maximum number of tokens a model can process in a single forward pass. It includes both **input** tokens (your prompt + conversation history) and **output** tokens(the model's response).
+
+LLMs can only "remember" a limited amount of information **during one conversation/request**. That memory is called the **Context Window**.
+
+Exceeding it causes an API error; common mitigations include chunking, summarisation, or retrieval-augmented generation.
+
 
 ```
 ┌───────────────────────────────────────────────────────┐
 │                    Context Window (e.g. 128 k tokens) │
 │  ┌──────────────────────────┐  ┌─────────────────────┐│
-│  │     INPUT tokens         │  │   OUTPUT tokens      ││
-│  │  system prompt +         │  │   model completion   ││
-│  │  conversation history +  │  │   (max_tokens)       ││
-│  │  user message +          │  │                      ││
-│  │  retrieved docs (RAG)    │  │                      ││
+│  │     INPUT tokens         │  │  OUTPUT tokens      ││
+│  │  system prompt +         │  │  model completion   ││
+│  │  conversation history +  │  │  (max_tokens)       ││
+│  │  user message +          │  │                     ││
+│  │  retrieved docs (RAG)    │  │                     ││
 │  └──────────────────────────┘  └─────────────────────┘│
 └───────────────────────────────────────────────────────┘
          input_tokens + output_tokens ≤ context_limit
 ```
 
+
 **Common context limits (approximate, check current docs):**
 
-| Model | Context Window |
-|-------|---------------|
-| GPT-5.5 | 1M tokens |
-| Claude Opus 4.8 | 1M tokens |
-| Gemini 3.1 Pro | 1M tokens |
-| Llama 4 Scout | 10M tokens |
-| DeepSeek V4 Pro | 1M tokens |
-| Grok 4 | 2M tokens |
+| Model           | Context Window |
+| --------------- | -------------- |
+| GPT-5.5         | 1M tokens      |
+| Claude Opus 4.8 | 1M tokens      |
+| Gemini 3.1 Pro  | 1M tokens      |
+| Llama 4 Scout   | 10M tokens     |
+| DeepSeek V4 Pro | 1M tokens      |
+| Grok 4          | 2M tokens      |
 
 Exceeding the context window raises an error. Strategies to handle large inputs: chunking, summarisation, RAG (covered in later days).
 
----
 
+This drives several architectural decisions: 
+- for long documents you chunk them and retrieve only the relevant chunks (RAG);
+- for long conversations you summarise or trim history; 
+- for very large code bases you index the codebase and surface only relevant files. Choosing a model with a larger context window can simplify design but increases cost per call.
+
+---
 ### 2.4 Embeddings
 
-#### Text → vectors
+```
+Text → Tokenizer → Tokens → 
+Embeddings → Vectors → Cosine Similarity → How similar are these vectors? → Best Matching Documents → LLM
+```
 
-An **embedding** is a fixed-length numerical vector that represents the *meaning* of text. LLM-derived embeddings place semantically similar text close together in vector space.
+- An **embedding** is a fixed-length numerical vector produced by a model that represents the semantic content of a piece of text. 
+- Semantically similar text produces vectors that are close in the vector space, measured by cosine similarity. 
+- Embeddings are widely used in semantic search, recommendation systems, vector databases, and Retrieval-Augmented Generation (RAG).
+
+
+LLM-derived embeddings place semantically similar text close together in vector space.
+
+Let's simplify that. Imagine we have the below sentences, and the converted to numbers, because computers compare numbers much more easily than sentences. 
+
+This long list of numbers is called a **vector**. The vector is typically hundreds to thousands of floats.
+
 
 ```
 "The cat sat on the mat"   →  [0.12, -0.34, 0.88, ..., 0.05]   (384 floats)
+
+
 "A kitten rested on a rug" →  [0.11, -0.31, 0.85, ..., 0.07]   (384 floats, similar!)
+
+
 "The stock market crashed"  →  [-0.55, 0.72, -0.12, ..., 0.91]  (384 floats, different)
 ```
 
-#### Cosine similarity
+Notice in the above example "The cat sat on the mat" and "A kitten rested on a rug" generates similar numbers. Means the meaning is similar. But the "The stock market crashed" generated vector is totally different.
 
-The standard metric for comparing embeddings. It measures the *angle* between two vectors, independent of their magnitude:
+
+```
+					"The cat sat on the mat."
+								↓
+							Tokenizer
+								↓
+			["The", "cat", "sat", "on", "the", "mat"]
+								↓		
+						Embedding Layer
+								↓
+					[
+					  [0.25, -0.81, ...],   ← "The"
+					  [-0.13, 0.72, ...],   ← "cat"
+					  [0.88, -0.20, ...],   ← "sat"
+					  ...
+					]	
+								↓
+							   LLM
+```
+
+---
+#### 2.4.1 Cosine similarity ( cos(θ) )
+
+
+> **Cosine Similarity** is the standard technique used to measure how similar two embedding vectors are. Instead of comparing exact words, it compares the **direction** of the vectors, which represents their semantic meaning. The result ranges from **-1 to +1**, where **+1 means the vectors are almost identical**, values around **0.85 or higher indicate very similar meaning**, and values near **0 indicate unrelated content**. It is widely used in semantic search, vector databases, and RAG systems to retrieve the most relevant documents.
+
+
+We have converted the sentences into vectors. Now how do we compare them?
+
+Cosine similarity is the standard metric for comparing embeddings. It measures the *angle* between two vectors, independent of their magnitude:
+
+Suppose we have two sentences.
+
+```
+Sentence A: "The cat sat on the mat."
+Sentence B: "A kitten rested on a rug."
+```
+
+Embedding Model converts them into vectors.
+
+```
+Sentence A ↓ [0.12, -0.34, 0.88, ..., 0.05]
+Sentence B ↓ [0.11, -0.31, 0.85, ..., 0.07]
+```
+
+How do we know whether they're similar? 
+We can comparing every number, it works but thats is impossible for large texts as it produces large vectors.
+
+We need one number that says "These two vectors are 92% similar." That's exactly what Cosine Similarity gives us. 
+
+The below formula calculates Angle between two vectors. The result is always in Range of : -1.0 (opposite) to +1.0 (identical)
+
 
 ```
            A · B
-cos(θ) = ─────────
+cos(θ) = ─────────      
           |A| × |B|
 
-Range: -1.0 (opposite) to +1.0 (identical)
-Practical threshold: >0.85 = very similar; 0.5–0.85 = related; <0.5 = unrelated
 ```
+
+- **cos(θ) = 0.85 - 1** (Small angel ==  high cosine similarity. The sentences are semantically very similar. 
+- **cos(θ) = 0.5 – 0.85** ( Large Angle == low cosine similarity)
+- **cos(θ) = -1 < 0.5** ( Opposite direction : Completely different)
+
 
 ASCII illustration:
 
@@ -221,17 +367,25 @@ ASCII illustration:
      (far from A and B in vector space)
 ```
 
-#### Why embeddings matter for AI projects
+Cosine Similarity doesn't care much about **how long** the vectors are. It only cares about Direction.
 
-- **Semantic search** — find documents by meaning, not keywords.
-- **RAG (Retrieval-Augmented Generation)** — retrieve relevant chunks to put into LLM context.
-- **Clustering & classification** — group similar documents without labels.
+
+#### 2.4.2 Why embeddings matter for AI projects
+
+- **Semantic search** — find documents by meaning, not keywords. Instead of searching "Spring Boot" exactly, we search by meaning. Spring Boot ≈ Java Backend ≈ REST API
+- **RAG (Retrieval-Augmented Generation) chunk retrieval** — retrieve relevant chunks and send only those to the LLM context. This saves context window.
+- **Document Clustering & classification** — group similar documents without labels.
 - **Duplicate detection** — high cosine similarity flags near-duplicates.
+- **recommendation systems**
 
+
+**How Embedding is used in a RAG pipeline?** 
+- In a RAG pipeline, you pre-embed your knowledge-base documents and store them in a vector database. At query time, you embed the user's question and retrieve the top-K most similar document chunks. Those chunks are inserted into the LLM's context window, giving it grounded, relevant information to answer from.
+
+---
 The embedding model you use today (`all-MiniLM-L6-v2`) is a sentence-transformer that runs fully locally — no API key, no cost, 384-dimensional vectors.
 
 ---
-
 ## 3. Hands-on Lab
 
 **Location:** `labs/common/day-01/`
@@ -268,176 +422,34 @@ python solution.py
 See `labs/common/day-01/README.md` for full instructions and expected output.
 
 ---
-
-## 4. Self-Check Quiz
-
-*Answer in your head or on paper first, then reveal the answers.*
-
-**Q1.** Name the hierarchy from broadest to narrowest: AI / Deep Learning / Generative AI / LLM / Machine Learning.
-
-<details>
-<summary>Show answer</summary>
-
-Broadest to narrowest: AI → Machine Learning → Deep Learning → Generative AI → LLM.
-
-</details>
-
-**Q2.** An LLM is often described as a "next-token predictor." What does this mean in plain English?
-
-<details>
-<summary>Show answer</summary>
-
-Given the sequence of tokens seen so far, the model outputs a probability distribution over every possible next token, then samples (or argmax-selects) one. This is repeated token-by-token until a stop condition.
-
-</details>
-
-**Q3.** A user's message is 320 characters of English. Roughly how many tokens is that?
-
-<details>
-<summary>Show answer</summary>
-
-320 characters ÷ 4 ≈ **80 tokens** (rule of thumb: ~4 chars per token for English).
-
-</details>
-
-**Q4.** Why does a rare or non-English word tend to cost more tokens than a common English word?
-
-<details>
-<summary>Show answer</summary>
+**Q4. Why does a rare or non-English word tend to cost more tokens than a common English word?**
 
 BPE builds its vocabulary from the most frequent byte-pair merges in the training corpus (mostly English web text). Rare or non-English words did not appear frequently enough to earn a single merged token, so they are split into many sub-word or even character-level tokens.
 
-</details>
 
-**Q5.** What is the context window, and what happens if you exceed it?
+**Q7. Give two concrete reasons why an LLM might produce a factually wrong answer.**
 
-<details>
-<summary>Show answer</summary>
+(1) the most-probable next token continues a plausible-sounding but incorrect sentence; 
+(2) the model's training data contained incorrect or outdated information; 
+(3) the model has no external fact-checking mechanism; 
+(4) stochastic sampling introduces variation.
 
-The context window is the maximum total number of tokens (input + output) that a model can process in one call. Exceeding it causes an API error; common mitigations include chunking, summarisation, or retrieval-augmented generation.
 
-</details>
 
-**Q6.** You have two sentences with a cosine similarity of 0.92 and two others with 0.18. What does each score indicate?
-
-<details>
-<summary>Show answer</summary>
-
-0.92 = the sentences are semantically very similar (nearly the same meaning). 0.18 = the sentences are largely unrelated in meaning.
-
-</details>
-
-**Q7.** Give two concrete reasons why an LLM might produce a factually wrong answer.
-
-<details>
-<summary>Show answer</summary>
-
-Any two of: (1) the most-probable next token continues a plausible-sounding but incorrect sentence; (2) the model's training data contained incorrect or outdated information; (3) the model has no external fact-checking mechanism; (4) stochastic sampling introduces variation.
-
-</details>
-
-**Q8.** Name three downstream tasks that use embeddings.
-
-<details>
-<summary>Show answer</summary>
-
-Any three of: semantic search, RAG chunk retrieval, document clustering, duplicate/near-duplicate detection, recommendation systems, classification with nearest-neighbour lookup.
-
-</details>
-
----
-
-## 5. Concept Deep-Dive Q&A
-
-*These questions test deeper, applied understanding of the day's concepts. Read the question, draft your own answer, then compare.*
 
 ---
 
 **Q1. "Can you explain what a large language model is to a non-technical stakeholder?"**
 
-<details>
-<summary>Show answer</summary>
 
 An LLM is a software system trained on enormous amounts of text — think most of the internet — to predict what word (more precisely, what token) comes next in a sequence. Through that training it learns grammar, facts, reasoning patterns, and writing styles. When you send it a prompt, it generates a continuation token by token. Despite this simple mechanism, well-trained models exhibit surprisingly powerful language abilities, which is why we can use them for tasks like summarisation, Q&A, code generation, and customer support.
-
-</details>
-
----
-
-**Q2. "What is a token, and why does it matter for cost estimation?"**
-
-<details>
-<summary>Show answer</summary>
-
-A token is the sub-word unit that LLMs operate on — not a character, not a word. Tokenisation is handled by an algorithm like BPE that merges common byte sequences into single tokens. As a rule of thumb, one token ≈ 4 English characters or 0.75 words. Cost and context limits are both measured in tokens, so understanding tokenisation lets you estimate API cost, check whether a document fits in the context window, and optimise prompts for efficiency.
-
-</details>
-
----
-
-**Q3. "What is a context window, and how does it affect how you design a system?"**
-
-<details>
-<summary>Show answer</summary>
-
-The context window is the maximum number of tokens — input plus output combined — that a model can process in a single API call. Everything the model "knows" about the current task must fit inside it. This drives several architectural decisions: for long documents you chunk them and retrieve only the relevant chunks (RAG); for long conversations you summarise or trim history; for very large code bases you index the codebase and surface only relevant files. Choosing a model with a larger context window can simplify design but increases cost per call.
-
-</details>
 
 ---
 
 **Q4. "Why are LLMs non-deterministic, and when would you want deterministic output?"**
 
-<details>
-<summary>Show answer</summary>
 
 LLMs sample from a probability distribution over the vocabulary at each token step. Even with the same prompt, different samples produce different completions. You control this with the `temperature` parameter: `temperature=0` makes the model always pick the highest-probability token, producing near-deterministic output — but exact reproducibility is NOT guaranteed across providers or hardware due to floating-point and batching differences. You want near-deterministic output for testing, compliance outputs, or structured data extraction where repeatability matters. For creative tasks you want higher temperature to get diverse outputs.
-
-</details>
-
----
-
-**Q5. "What is an embedding, and how is it used in a RAG pipeline?"**
-
-<details>
-<summary>Show answer</summary>
-
-An embedding is a dense numerical vector (typically hundreds to thousands of floats) produced by a model to represent the semantic content of a piece of text. Semantically similar text produces vectors that are close in the vector space, measured by cosine similarity. In a RAG pipeline, you pre-embed your knowledge-base documents and store them in a vector database. At query time, you embed the user's question and retrieve the top-K most similar document chunks. Those chunks are inserted into the LLM's context window, giving it grounded, relevant information to answer from.
-
-</details>
-
----
-
-**Q6. "What is cosine similarity and why is it preferred over Euclidean distance for embeddings?"**
-
-<details>
-<summary>Show answer</summary>
-
-Cosine similarity measures the cosine of the angle between two vectors — equivalently, their dot product divided by the product of their magnitudes. It ranges from -1 to 1, where 1 means identical direction. It is preferred for embeddings because embedding models are trained to encode meaning in the *direction* of vectors, not their magnitude. Two sentences can have very different magnitudes (due to length or encoding choices) but the same meaning; cosine similarity captures this correctly where Euclidean distance would be misled by magnitude differences.
-
-</details>
-
----
-
-**Q7. "What are LLM hallucinations and how do you mitigate them?"**
-
-<details>
-<summary>Show answer</summary>
-
-Hallucinations are when an LLM outputs fluent, confident-sounding content that is factually incorrect or entirely fabricated. They arise because the model is optimising for probable next tokens, not for factual accuracy. Common mitigations: (1) RAG — ground the model's answer in retrieved, verified documents; (2) tool use — let the model call APIs or databases for facts rather than recalling from parameters; (3) output validation — use structured output schemas and post-process/verify critical fields; (4) chain-of-thought prompting — asking the model to reason step-by-step reduces but does not eliminate hallucinations; (5) human-in-the-loop review for high-stakes outputs.
-
-</details>
-
----
-
-**Q8. "How does BPE tokenisation handle a word it has never seen before?"**
-
-<details>
-<summary>Show answer</summary>
-
-BPE cannot produce a single token for an unseen word because that word was never frequent enough in training to get its own merged entry in the vocabulary. Instead, BPE falls back to smaller sub-word pieces — potentially down to individual bytes or characters — that are always in the vocabulary. So an invented word like "grokkinomics" might be tokenised as ["gr", "ok", "kin", "om", "ics"], costing five tokens instead of one. This graceful degradation means BPE never produces an unknown-token error, but rare words and non-English text cost more tokens per unit of meaning.
-
-</details>
 
 ---
 

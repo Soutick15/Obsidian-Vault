@@ -19,28 +19,24 @@ By the end of Day 2 you will be able to:
 
 ### 2.1 The Big Picture — From Tokens to Logits
 
-GPT - Generative pre-trained transformer. 
+Almost every modern LLM (GPT, Llama, Gemini, Claude, Mistral, DeepSeek) is based on the **Transformer Architecture** introduced in the 2017 paper:
 
-Transfomet is a geneative in nature based on pre
+GPT - Generative pre-trained transformer. Transformer is a generative in nature based on pre-trained data.
 
 On Day 1 you saw that text becomes tokens and tokens become embeddings. 
-
 
 
 The transformer takes those embeddings and transforms them through a stack of identical blocks, ultimately producing a probability distribution over the vocabulary at each position.
 
 ```
 Input text
-    │
-    ▼
+	↓
 [Tokeniser]          "The cat sat" → [464, 3797, 3332]
-    │
-    ▼
-[Token Embedding]    integer IDs → dense vectors  shape: (seq_len, d_model)
+	↓
+[Token Embedding] integer IDs → dense vectors  shape: (seq_len, d_model)
     +
 [Positional Encoding] inject order information
-    │
-    ▼
+	↓
 ┌────────────────────────────────────┐
 │  Transformer Block × N             │
 │  ┌──────────────────────────────┐  │
@@ -52,8 +48,7 @@ Input text
 │  │  + Layer Norm + Residual     │  │
 │  └──────────────────────────────┘  │
 └────────────────────────────────────┘
-    │
-    ▼
+	↓
 [Output Linear + Softmax]  → logits / probabilities over vocabulary
 ```
 
