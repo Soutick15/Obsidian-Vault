@@ -400,9 +400,9 @@ The Anthropic Python SDK ≥0.20 has built-in retry with `max_retries=` on the c
 import httpx
 
 client = anthropic.Anthropic(
-    api_key=os.getenv("ANTHROPIC_API_KEY"),
-    timeout=httpx.Timeout(60.0, connect=5.0),  # 60s read, 5s connect
-    max_retries=2,
+    api_key = os.getenv("ANTHROPIC_API_KEY"),
+    timeout = httpx.Timeout(60.0, connect=5.0),  # 60s read, 5s connect
+    max_retries = 2,
 )
 ```
 
