@@ -77,6 +77,18 @@ Quick debugging tip: add `print()` calls around the broken line to inspect value
 
 ### 2.2 Virtual Environments and pip
 
+#### What does PIP do?
+
+PIP is the standard **package manager** for Python. It allows you to install, update, and manage additional libraries and dependencies that are not included in the standard Python library.
+
+Here are a few quick examples of how it's used in your terminal or command prompt:
+
+- **Installing a package:** `pip install requests`
+- **Uninstalling a package:** `pip uninstall requests`
+- **Upgrading a package:** `pip install --upgrade requests`
+- **Listing installed packages:** `pip list`
+
+#### What is a Virtual Environments?
 
 A virtual environment (venv) is an isolated Python environment for a project. It allows every project to have its own Python packages without affecting other projects. This prevents dependency conflicts between different projects.
 
@@ -138,6 +150,7 @@ python3 -m venv .venv
 It creates a folder named `.venv` that contains a separate Python environment for the project, including its own Python executable and a location for project-specific packages.
 
 python creates a folder : 
+
 ```
 My Project
 │
@@ -146,7 +159,9 @@ My Project
 └── .venv
 ```
 
+
 Inside `.venv` you'll see something like:
+
 ```
 .venv
 │
@@ -166,19 +181,11 @@ Inside `.venv` you'll see something like:
 ```
 
 
-
-
 - Python copies (or symlinks) the interpreter binary into `.venv/bin/` and creates a private `site-packages/` directory inside `.venv/lib/`. 
 
 What happens after activation?
 
 When you activate the venv, the terminal uses the Python and pip from the virtual environment, so any packages we install are installed only for that project.
-
-
-
-
-
-
 
 ---
 
@@ -373,8 +380,8 @@ print(f"Hi, {name}!")
 print (f"Your age is {age} and your salary is {salary}!") 
 ```
 
-**Why should `input()` never be used in library functions, and what is the better pattern? **
 
+**Why should `input()` never be used in library functions, and what is the better pattern?** 
 
 - `input()` blocks execution and ties your function to a terminal. 
 - Functions that contain `input()` cannot be called from automated tests, pipelines, or other scripts. 

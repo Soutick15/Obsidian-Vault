@@ -23,12 +23,12 @@ By the end of this day you will be able to:
 
 REST APIs communicate over HTTP. Every request has:
 
-| Part | Description |
-|---|---|
-| **Method** | `GET` (read), `POST` (create/send), `PUT` (replace), `PATCH` (update), `DELETE` (remove) |
-| **URL** | Identifies the resource — e.g. `https://api.example.com/v1/completions` |
-| **Headers** | Metadata — `Content-Type: application/json`, `Authorization: Bearer <token>` |
-| **Body** | JSON payload (POST/PUT/PATCH only; GET has none) |
+| Part        | Description                                                                                              |
+| ----------- | -------------------------------------------------------------------------------------------------------- |
+| **Method**  | `GET` (read), <br>`POST` (create/send), <br>`PUT` (replace), <br>`PATCH` (update), <br>`DELETE` (remove) |
+| **URL**     | Identifies the resource — e.g. `https://api.example.com/v1/completions`                                  |
+| **Headers** | Metadata — <br>`Content-Type: application/json`, <br>`Authorization: Bearer <token>`                     |
+| **Body**    | JSON payload (POST/PUT/PATCH only; GET has none)                                                         |
 
 **Common status codes:**
 
@@ -45,7 +45,7 @@ REST APIs communicate over HTTP. Every request has:
 
 **Typical JSON round-trip:**
 
-```
+```python
 # Request
 POST /v1/chat/completions
 Content-Type: application/json
@@ -53,14 +53,31 @@ Authorization: Bearer sk-...
 
 {
   "model": "gpt-4o-mini",
-  "messages": [{"role": "user", "content": "Hello"}]
+  "messages": [
+	  {
+		  "role": "user",
+		  "content": "Hello"
+		}
+	]
 }
 
 # Response (200 OK)
 {
   "id": "chatcmpl-abc",
-  "choices": [{"message": {"role": "assistant", "content": "Hi there!"}}],
-  "usage": {"prompt_tokens": 10, "completion_tokens": 6}
+  "choices": [
+	  {
+		  "message": 
+			  {
+			  "role": "assistant",
+			  "content": "Hi there!"
+			  }
+		}
+	],
+  "usage": 
+	  {
+	  "prompt_tokens": 10,
+	  "completion_tokens": 6
+	  }
 }
 ```
 
@@ -78,7 +95,11 @@ When you open an API reference, look for:
 
 ### 2.2 Making Requests with `requests` and `httpx`
 
-Both libraries feel very similar. `requests` is synchronous; `httpx` supports both sync and async, which is why the course labs prefer `httpx`.
+Both libraries feel very similar. 
+- `requests` is synchronous; 
+- `httpx` supports both sync and async, 
+
+In this course labs prefer `httpx`, cause it supports both sync and async operation.
 
 #### 2.2.1 `requests` — GET and POST
 
@@ -86,22 +107,34 @@ Both libraries feel very similar. `requests` is synchronous; `httpx` supports bo
 import requests
 
 # --- GET ---
-response = requests.get(
-    "https://httpbin.org/get",
-    params={"foo": "bar"},          # appended as ?foo=bar
-    headers={"Accept": "application/json"},
-    timeout=10,                      # seconds — always set this
+response = requests.get
+	("https://httpbin.org/get",
+    params = {
+	    "foo": "bar"           # query params appended as ?foo=bar
+	},          
+    headers = {
+	    "Accept": "application/json"
+	},
+    timeout = 10,                # seconds — always set this
 )
-response.raise_for_status()         # raises HTTPError for 4xx/5xx
-data = response.json()              # parse body as JSON → dict
+response.raise_for_status()# checks Status Code raises HTTPError for 4xx/5xx
+data = response.json()         # parse body as JSON → dict
 print(data["url"])
+```
 
+
+```python
 # --- POST with JSON body ---
-payload = {"prompt": "Hello", "max_tokens": 50}
+payload = {
+	"prompt": "Hello",
+	"max_tokens": 50
+	}
 response = requests.post(
     "https://api.example.com/v1/complete",
-    json=payload,                    # sets Content-Type: application/json
-    headers={"Authorization": "Bearer sk-abc"},
+    json = payload,                    # sets Content-Type: application/json
+    headers = {
+    "Authorization": "Bearer sk-abc"
+    },
     timeout=30,
 )
 response.raise_for_status()
@@ -114,23 +147,25 @@ result = response.json()
 import httpx
 
 # --- Sync (same feel as requests) ---
-with httpx.Client(timeout=10) as client:
+with httpx.Client(timeout = 10) as client:
     r = client.get("https://httpbin.org/get")
     r.raise_for_status()
     print(r.json())
+```
 
+
+```python
 # --- Async (used in async contexts) ---
 import asyncio
 
 async def fetch_data():
-    async with httpx.AsyncClient(timeout=10) as client:
+    async with httpx.AsyncClient(timeout = 10) as client:
         r = await client.get("https://httpbin.org/get")
         r.raise_for_status()
         return r.json()
 
 data = asyncio.run(fetch_data())
 ```
-
 #### 2.2.3 Error handling pattern
 
 ```python
@@ -138,8 +173,8 @@ import httpx
 
 def call_api(url: str, payload: dict) -> dict:
     try:
-        with httpx.Client(timeout=15) as client:
-            r = client.post(url, json=payload)
+        with httpx.Client(timeout = 15) as client:
+            r = client.post(url, json = payload)
             r.raise_for_status()
             return r.json()
     except httpx.TimeoutException:
@@ -150,13 +185,12 @@ def call_api(url: str, payload: dict) -> dict:
         raise RuntimeError(f"Network error: {e}")
 ```
 
-Key points:
+Key points :
 - Always set a **timeout** — a hanging request blocks your program forever.
 - `raise_for_status()` turns 4xx/5xx into a Python exception you can `except`.
 - Distinguish network errors (`RequestError`) from HTTP errors (`HTTPStatusError`).
 
 ---
-
 ### 2.3 Async / Await Basics
 
 Python's `asyncio` lets a single thread do other work while waiting for I/O (network calls, file reads). This is exactly what you need when calling LLM APIs — the model spends most time "thinking" on the server, so your Python process can handle other requests meanwhile.
@@ -447,66 +481,66 @@ You will work with two pure functions — `normalize_text` and `word_frequencies
 
 **Q1. What does `response.raise_for_status()` do?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 It raises an `httpx.HTTPStatusError` (or `requests.HTTPError`) if the HTTP response status code is 4xx or 5xx. 2xx responses pass through silently. This lets you turn bad HTTP responses into Python exceptions you can `except` and handle.
 
-</details>
+
 
 **Q2. What is the difference between a positional argument and an optional argument in `argparse`?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 A **positional argument** is defined without a leading `--` (e.g. `add_argument("input")`). It is required by position — the first bare word on the command line. An **optional argument** starts with `--` (e.g. `add_argument("--upper")`). It is optional and identified by its flag name, not position. Optional arguments can have defaults; positional arguments usually don't.
 
-</details>
+
 
 **Q3. What does `@pytest.mark.parametrize` do, and why is it useful?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 It runs the decorated test function once for each set of parameters you provide. For example, `@pytest.mark.parametrize("x,y", [(1,2), (3,4)])` generates two test cases. It is useful because it lets you test many inputs without copying the same assertion logic — and if one case fails, pytest tells you exactly which input caused it.
 
-</details>
+
 
 **Q4. You call `asyncio.run(fetch_data())`. What does that line do?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 `asyncio.run` creates a new event loop, runs the coroutine `fetch_data()` until it completes, then closes the event loop. It is the standard entry point for running async code from synchronous Python (e.g. from `if __name__ == "__main__"`). You should only call it once per program — don't nest `asyncio.run` calls.
 
-</details>
+
 
 **Q5. Which HTTP status code signals that you are being rate-limited, and what should your code do when it receives it?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 **429 Too Many Requests.** Your code should back off — wait before retrying. A common strategy is exponential backoff: wait 1 second, then 2, then 4, etc. Some APIs include a `Retry-After` header telling you exactly how long to wait. Never retry immediately in a tight loop, as this will keep triggering the rate limit.
 
-</details>
+
 
 **Q6. What is a pytest fixture and when would you use one?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 A fixture is a function decorated with `@pytest.fixture` that provides a test with data, objects, or setup/teardown logic. You use one when multiple tests need the same starting state — for example, a pre-loaded dictionary, a temporary file, or a mock HTTP client. Pytest injects the fixture by matching the parameter name in the test function to the fixture name.
 
-</details>
+
 
 **Q7. Why does the `--selftest` pattern set a `nargs="?"` or `nargs="*"` on the main positional argument in many labs?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 When `--selftest` is passed, the script doesn't need any positional input — it uses hardcoded sample data. Making the positional argument optional (`nargs="?"` means zero or one value) prevents `argparse` from raising an error about a missing argument when the user only passes `--selftest`. The script then checks `if args.selftest:` first and exits before ever reading the positional argument.
 
-</details>
+
 
 ---
 
@@ -514,8 +548,8 @@ When `--selftest` is passed, the script doesn't need any positional input — it
 
 **Q1. Why do `requests` and `httpx` both exist, and when should you choose one over the other?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 `requests` is the original, widely-used synchronous HTTP library. It has a large ecosystem, great documentation, and works perfectly for scripts and CLI tools that don't need concurrency.
 
@@ -523,23 +557,23 @@ When `--selftest` is passed, the script doesn't need any positional input — it
 
 For simple one-off scripts with no concurrency requirement, either works fine.
 
-</details>
+
 
 **Q2. What exactly is an event loop, and why can't you just call `await` anywhere in your code?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 An event loop is a running process that manages a queue of coroutines and callbacks. It decides which coroutine runs next when the currently running one hits an `await` and suspends. `asyncio.run()` creates this loop.
 
 You can only use `await` inside a function defined with `async def`. This is a **grammar rule enforced at parse time**: Python's syntax simply does not allow the `await` keyword outside an `async def` function — attempting it causes a `SyntaxError` before the code even runs. It is not a runtime check for whether an event loop exists; it is a compile-time/grammar restriction.
 
-</details>
+
 
 **Q3. What is the difference between `asyncio.gather` and calling coroutines sequentially with `await`?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 Sequential awaits run the coroutines one after the other — total time is `t1 + t2`:
 
@@ -558,23 +592,23 @@ async def run_concurrent():
 
 Use `gather` whenever you have multiple independent I/O operations that don't depend on each other's results.
 
-</details>
+
 
 **Q4. How does `pytest` test discovery work, and what happens if you name a test file `helpers.py`?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 By default, pytest searches for test files matching `test_*.py` or `*_test.py` in the current directory and all subdirectories. Inside those files it collects functions starting with `test_` and classes starting with `Test`.
 
 If you name your file `helpers.py`, pytest will not discover it unless you explicitly pass it on the command line (`pytest helpers.py`) or configure pytest to change its discovery pattern in `pytest.ini` / `pyproject.toml`. This is intentional — it lets you have helper modules alongside your test files without them being collected as tests.
 
-</details>
+
 
 **Q5. What is the purpose of `raise_for_status()` vs. checking `response.status_code` manually?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 Both approaches can work, but `raise_for_status()` is more reliable in practice.
 
@@ -582,12 +616,12 @@ Checking `status_code` manually — e.g. `if response.status_code != 200` — is
 
 `raise_for_status()` raises an exception for *any* 4xx or 5xx, making it impossible to accidentally proceed with a failed response. You can then catch `HTTPStatusError` in one place. The exception includes the response object, so you can still read the status code and body for logging.
 
-</details>
+
 
 **Q6. How does the `--selftest` pattern relate to what pytest is already doing? Are they redundant?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 They are complementary, not redundant.
 
@@ -597,23 +631,23 @@ They are complementary, not redundant.
 
 Think of `--selftest` as "is this even running?" and `pytest` as "does it behave correctly in all cases?"
 
-</details>
+
 
 **Q7. Can you use `httpx.AsyncClient` inside a `pytest` test function? What do you need?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 Yes, but you need the test function to be `async def` and you need `pytest-asyncio` (or similar) installed so pytest knows how to run async test functions. With `pytest-asyncio`, you either decorate the test with `@pytest.mark.asyncio` or set `asyncio_mode = "auto"` in your pytest config.
 
 In this course's exercises, the runnable tests are synchronous (no network calls) to avoid adding that dependency. The async patterns you learn in section 2.3 are applied in the main course labs, which have their own async test infrastructure.
 
-</details>
+
 
 **Q8. What makes a function "pure" and why does that matter for testing?**
 
-<details>
-<summary>Show answer</summary>
+
+Show answer
 
 A **pure function** always returns the same output for the same input, and has no side effects (no network calls, no file writes, no global state mutations, no random numbers unless seeded).
 
@@ -625,7 +659,7 @@ Pure functions are trivial to test because:
 
 The course labs deliberately keep core logic in pure functions and isolate I/O in thin wrapper layers, so the tests stay fast and reliable even without API keys.
 
-</details>
+
 
 ---
 

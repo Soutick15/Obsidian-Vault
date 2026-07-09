@@ -20,6 +20,12 @@ By the end of this day you will be able to:
 
 ### 2.1 The Messages API — Shape & Fields
 
+
+**Why do we need an API to use an LLM?**
+
+> Large Language Models run on powerful servers hosted by providers such as OpenAI and Anthropic. Applications cannot communicate with the model directly, so they use an HTTP-based API. The application sends a request containing the conversation, model name, and generation settings. The provider runs the model, generates the response token by token, and returns the result as an HTTP response.
+
+
 Both Anthropic (Claude) and OpenAI use the same conceptual shape. Understanding the overlap makes you provider-flexible, which is what clients expect.
 
 #### 2.1.1 Anthropic (Claude) — request anatomy
@@ -30,14 +36,22 @@ import anthropic
 client = anthropic.Anthropic(api_key="sk-ant-...")
 
 response = client.messages.create(
-    model="claude-haiku-4-5",        # which model to call
-    max_tokens=1024,                  # hard ceiling on output tokens
-    temperature=0.7,                  # 0=deterministic, 1=default, >1=creative
+    model="claude-haiku-4-5",       # which model to call
+    max_tokens=1024,                # hard ceiling on output tokens
+    temperature=0.7,  # 0=deterministic, 1=default, >1=creative
     system="You are a helpful assistant.",  # optional system prompt (string)
     messages=[                        # conversation history
-        {"role": "user",    "content": "What is 12 * 7?"},
-        {"role": "assistant","content": "The answer is 84."},
-        {"role": "user",    "content": "Now add 100."},
+        {
+	        "role": "user",    
+	        "content": "What is 12 * 7?"
+        },
+        {
+	        "role": "assistant",
+	        "content": "The answer is 84."
+	    },
+	    {
+		    "role": "user",    
+		    "content": "Now add 100."},
     ],
 )
 
@@ -58,14 +72,26 @@ from openai import OpenAI
 client = OpenAI(api_key="sk-...")
 
 response = client.chat.completions.create(
-    model="gpt-5-mini",
-    max_tokens=1024,
-    temperature=0.7,
-    messages=[
-        {"role": "system",    "content": "You are a helpful assistant."},
-        {"role": "user",      "content": "What is 12 * 7?"},
-        {"role": "assistant", "content": "The answer is 84."},
-        {"role": "user",      "content": "Now add 100."},
+    model = "gpt-5-mini",
+    max_tokens = 1024,
+    temperature = 0.7,
+    messages = [
+        {
+	        "role": "system",
+	        "content": "You are a helpful assistant."
+        },
+        {
+	        "role": "user",
+	        "content": "What is 12 * 7?"
+        },
+        {
+	        "role": "assistant",
+	        "content": "The answer is 84."
+        },
+        {
+	        "role": "user",
+	        "content": "Now add 100."
+        },
     ],
 )
 
@@ -86,7 +112,12 @@ The API is **stateless** — every request must carry the entire conversation hi
 history = []
 
 def chat(user_input: str, system: str = "") -> str:
-    history.append({"role": "user", "content": user_input})
+    history.append(
+	    {
+		    "role": "user", 
+		    "content": user_input
+		}
+	)
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=512,
@@ -94,7 +125,12 @@ def chat(user_input: str, system: str = "") -> str:
         messages=history,
     )
     assistant_text = response.content[0].text
-    history.append({"role": "assistant", "content": assistant_text})
+    history.append(
+	    {
+		    "role": "assistant", 
+		    "content": assistant_text
+	    }
+    )
     return assistant_text
 ```
 
@@ -102,16 +138,16 @@ def chat(user_input: str, system: str = "") -> str:
 
 #### 2.1.4 Side-by-side field comparison
 
-| Concept | Claude (Anthropic) | OpenAI |
-|---|---|---|
-| System prompt | Top-level `system=` field | `{"role":"system","content":"..."}` |
-| User turn | `{"role":"user","content":"..."}` | Same |
-| Assistant turn | `{"role":"assistant","content":"..."}` | Same |
-| Temperature range | 0–1 (recommended) | 0–2 |
-| Response text | `response.content[0].text` | `response.choices[0].message.content` |
-| Token usage | `response.usage.input_tokens` | `response.usage.prompt_tokens` |
-| Stop reason | `response.stop_reason` | `response.choices[0].finish_reason` |
-| Tool signal | `stop_reason == "tool_use"` | `finish_reason == "tool_calls"` |
+| Concept           | Claude (Anthropic)                     | OpenAI                                |
+| ----------------- | -------------------------------------- | ------------------------------------- |
+| System prompt     | Top-level `system=` field              | `{"role":"system","content":"..."}`   |
+| User turn         | `{"role":"user","content":"..."}`      | Same                                  |
+| Assistant turn    | `{"role":"assistant","content":"..."}` | Same                                  |
+| Temperature range | 0–1 (recommended)                      | 0–2                                   |
+| Response text     | `response.content[0].text`             | `response.choices[0].message.content` |
+| Token usage       | `response.usage.input_tokens`          | `response.usage.prompt_tokens`        |
+| Stop reason       | `response.stop_reason`                 | `response.choices[0].finish_reason`   |
+| Tool signal       | `stop_reason == "tool_use"`            | `finish_reason == "tool_calls"`       |
 
 ---
 
@@ -119,17 +155,27 @@ def chat(user_input: str, system: str = "") -> str:
 
 #### Why stream?
 
-Without streaming, the user stares at a blank screen until the entire response is generated — 5–30 seconds for long outputs. Streaming sends each token as soon as it's produced, so the UI feels fast even for long replies. This is the standard UX pattern for chat interfaces (ChatGPT, Claude.ai, etc.).
+Without streaming, the user stares at a blank screen until the entire response is generated — 5–30 seconds for long outputs. 
 
-Streaming uses **Server-Sent Events (SSE)**: the HTTP connection stays open and the server sends small `data:` frames. Each frame contains a JSON chunk with one or a few tokens.
+Instead of waiting for the **entire response**, Streaming sends small pieces as soon as they're generated, so the UI feels fast even for long replies. This is the standard UX pattern for chat interfaces (ChatGPT, Claude.ai, etc.).
+
+Streaming uses **Server-Sent Events (SSE)** : the HTTP connection stays open and the server sends small `data:` frames. Each frame contains a JSON chunk with one or a few tokens.
 
 #### Streaming with Claude
 
 ```python
+
+# with client.messages.create() :
 with client.messages.stream(
-    model="claude-haiku-4-5",
+
+    model = "claude-haiku-4-5",
     max_tokens=512,
-    messages=[{"role": "user", "content": "Tell me a short story."}],
+    messages=[
+	    {
+		    "role": "user",
+			"content": "Tell me a short story."
+		}
+	],
 ) as stream:
     for text_chunk in stream.text_stream:
         print(text_chunk, end="", flush=True)   # print token-by-token
@@ -142,10 +188,15 @@ with client.messages.stream(
 
 ```python
 stream = client.chat.completions.create(
-    model="gpt-5-mini",
-    max_tokens=512,
-    messages=[{"role": "user", "content": "Tell me a short story."}],
-    stream=True,
+    model = "gpt-5-mini",
+    max_tokens = 512,
+    messages = [
+	    {
+		    "role": "user",
+			"content": "Tell me a short story."
+		}
+	],
+    stream = True,
 )
 for chunk in stream:
     delta = chunk.choices[0].delta.content
@@ -164,7 +215,25 @@ print()
 
 ### 2.3 Tool / Function Calling
 
-Tool calling (also called "function calling") lets the model request execution of real-world functions. The model does NOT execute code — it outputs a structured JSON request, your code runs the function, then you feed the result back for the model to incorporate.
+First understand that why LLMs need Tool / Function Calling?
+Without Tool Calling, an LLM is just a very smart chatbot. With Tool Calling, it becomes an AI assistant that can:
+
+- Grounds the model in real data (current time, live prices, Call REST APIs, DB queries).
+- Enables structured side effects (send email, update record).
+- Forms the core of agent systems (Day 9 goes deep on agents).
+- Book tickets
+- Calculate values
+- Execute business logic
+
+This is exactly how **ChatGPT**, **Claude**, **GitHub Copilot**, **Cursor**, and AI Agents work.
+
+> **Tool Calling (or Function Calling)** allows an LLM to request that an external function be executed. The LLM model never execute code itself. Instead, it only decides *which tool to call* and what arguments to pass. It returns a structured tool request (json) containing the tool name and arguments.
+> 
+>Our application code executes the function, sends the result back to the model, and the model uses that result to generate the final response. 
+>
+>This enables LLMs to access live data, interact with databases and APIs, and perform real-world actions.
+>
+>That single idea is the foundation of AI agents, RAG systems, Copilot-style assistants, and production AI applications.
 
 #### The tool-calling loop
 
@@ -182,13 +251,15 @@ Model returns stop_reason="tool_use"  → contains tool name + args
 Model returns final text answer
 ```
 
-#### Step 1 — Define the tool schema (Claude)
+#### Step 1 — 
+
+Define the tool schema (Claude)
 
 ```python
 tools = [
     {
-        "name": "calculate",
-        "description": "Evaluate a simple arithmetic expression and return the numeric result.",
+        "name": "calculate", # function name
+        "description": "Evaluate a simple arithmetic expression and return the numeric result.", # Tells the LLM when to use the tool.
         "input_schema": {
             "type": "object",
             "properties": {
@@ -203,15 +274,16 @@ tools = [
 ]
 ```
 
-For OpenAI the wrapper key is `"type": "function"` and the schema lives under `"function"`:
+Define the tool schema (OpenAI) : For OpenAI the wrapper key is `"type": "function"` and the schema lives under `"function"`:
+
 
 ```python
 tools_oai = [
     {
-        "type": "function",
+        "type": "function", 
         "function": {
-            "name": "calculate",
-            "description": "Evaluate a simple arithmetic expression.",
+            "name": "calculate", # function name
+            "description": "Evaluate a simple arithmetic expression.",  # when to use the tool.
             "parameters": {
                 "type": "object",
                 "properties": {
@@ -228,10 +300,15 @@ tools_oai = [
 
 ```python
 response = client.messages.create(
-    model="claude-haiku-4-5",
-    max_tokens=512,
-    tools=tools,
-    messages=[{"role": "user", "content": "What is (45 * 3) + 17?"}],
+    model = "claude-haiku-4-5",
+    max_tokens = 512,
+    tools = tools,
+    messages = [
+	    {
+		    "role": "user",
+		    "content": "What is (45 * 3) + 17?"
+		}
+	],
 )
 
 if response.stop_reason == "tool_use":
@@ -261,15 +338,23 @@ result = safe_calc(tool_input["expression"])  # 152.0
 
 # Append assistant turn + tool result, then call again
 messages = [
-    {"role": "user",      "content": "What is (45 * 3) + 17?"},
-    {"role": "assistant", "content": response.content},       # include tool_use block
-    {"role": "user",      "content": [                        # tool_result block
-        {
-            "type": "tool_result",
-            "tool_use_id": tool_id,
-            "content": str(result),
-        }
-    ]},
+    {
+	    "role": "user",
+	    "content": "What is (45 * 3) + 17?"
+	},
+    {
+	    "role": "assistant",
+		"content": response.content},# include tool_use block
+    {
+	    "role": "user",
+	    "content": [                        # tool_result block
+	        {
+	            "type": "tool_result",
+	            "tool_use_id": tool_id,
+	            "content": str(result),
+	        }
+	    ]
+    },
 ]
 
 final = client.messages.create(
@@ -295,15 +380,19 @@ messages.append({
 # then call client.chat.completions.create() again with the updated messages
 ```
 
-#### Why tool calling matters
 
-- Grounds the model in real data (current time, live prices, DB queries).
-- Enables structured side effects (send email, update record).
-- Forms the core of agent systems (Day 9 goes deep on agents).
 
 ---
 
 ### 2.4 Multimodal Inputs (Images)
+
+Until Now what we have learned, every request we've sent to LLM is text and LLM responds in text.
+
+But what if the user uploads an image how your LLM will handle it?
+
+A model that understands only text is a Single Modal.
+
+Multimodal input means : A model that understands - (Text + images)
 
 Both providers support sending images alongside text. The model "sees" the image and can answer questions about it.
 
@@ -319,7 +408,7 @@ response = client.messages.create(
     max_tokens=512,
     messages=[{
         "role": "user",
-        "content": [
+        "content": [ # content is List[] compared to text " " 
             {
                 "type": "image",
                 "source": {
@@ -455,25 +544,25 @@ Answer these before looking at the answers. They test whether you actually under
 
 **Q1.** You're building a multi-turn chat app with the Anthropic API. After five exchanges, your 6th request fails with "messages must alternate user/assistant roles." What's the most likely cause?
 
-<details>
+
 <summary>Show answer</summary>
 
 You appended the assistant reply to `history` but didn't include it — or you accidentally added two user messages in a row. The API requires strict alternating roles. Check that each `messages.create()` call ends with a user message, and that the history list strictly alternates `user → assistant → user → assistant → …`.
 
-</details>
+
 
 **Q2.** What does `flush=True` do in `print(chunk, end="", flush=True)` and why is it needed for streaming?
 
-<details>
+
 <summary>Show answer</summary>
 
 Python buffers stdout by default — text accumulates in a buffer and only appears when the buffer fills or the program ends. `flush=True` forces the buffer to write immediately after each `print()` call. Without it, streaming tokens would all appear at once at the end, defeating the purpose.
 
-</details>
+
 
 **Q3.** A user asks "What time is it?" The model returns `stop_reason = "tool_use"` with `tool_name = "get_current_time"`. What exact steps must your code take before calling the API again?
 
-<details>
+
 <summary>Show answer</summary>
 
 1. Extract `tool_id`, `tool_name`, and `tool_input` from the `tool_use` content block.
@@ -482,52 +571,52 @@ Python buffers stdout by default — text accumulates in a buffer and only appea
 4. Append a `user` message containing a `tool_result` block with `tool_use_id`, `content` (the result), and `type: "tool_result"`.
 5. Call `messages.create()` again with the updated history.
 
-</details>
+
 
 **Q4.** What is the difference between how Claude and OpenAI handle the system prompt in their messages arrays?
 
-<details>
+
 <summary>Show answer</summary>
 
 Claude accepts `system` as a **separate top-level parameter** (`system="…"`) — it is not a message in the list. OpenAI embeds it as the first element of the `messages` list with `role: "system"`. This is a common source of bugs when writing provider-flexible code.
 
-</details>
+
 
 **Q5.** Your app is receiving HTTP 429 errors. You add a `time.sleep(60)` before every retry. What's wrong with this approach?
 
-<details>
+
 <summary>Show answer</summary>
 
 A fixed 60-second wait is too long most of the time (rate limits often clear in seconds) and may still be too short during heavy load. The correct approach is **exponential backoff**: wait 1s, then 2s, then 4s, etc., often with a small random jitter. The Anthropic SDK also offers built-in retry with `max_retries=` on the client.
 
-</details>
+
 
 **Q6.** An image you send with a Claude request is 1024×1024 pixels. Roughly how many tokens does it consume, and how does that affect your `max_tokens` setting?
 
-<details>
+
 <summary>Show answer</summary>
 
 A large image consumes roughly 1000–1700 input tokens. These count against your **context window** (input side) but not against `max_tokens`, which only limits the output. However, if total input tokens (text + images) approach the context limit, the model may truncate or error. Budget accordingly.
 
-</details>
+
 
 **Q7.** What does `stop_reason = "max_tokens"` tell you, and what should you do about it?
 
-<details>
+
 <summary>Show answer</summary>
 
 It means the model hit the output token limit before finishing its answer — the response is truncated. You should either: (a) increase `max_tokens`, (b) ask the model for a shorter response via your prompt, or (c) send a follow-up message asking the model to continue (be careful — it may repeat context).
 
-</details>
+
 
 **Q8.** True or False: the model executes the function/tool code directly when it outputs a `tool_use` block.
 
-<details>
+
 <summary>Show answer</summary>
 
 **False.** The model only outputs a *request* in JSON form — `{"name": "calculate", "input": {"expression": "3+4"}}`. Your application code is entirely responsible for executing the function and returning the result. The model has no ability to run code directly.
 
-</details>
+
 
 ---
 
@@ -539,93 +628,93 @@ These questions test deeper, applied understanding of the day's concepts on APIs
 
 **Q1. "Walk me through how tool calling works end-to-end."**
 
-<details>
+
 <summary>Show answer</summary>
 
 Tool calling is a two-request loop. In the first request, you send the user's message along with a list of tool definitions — each is a JSON schema describing the tool's name, purpose, and parameters. If the model determines a tool is needed, it returns early with `stop_reason = "tool_use"` and a structured JSON block containing the tool name and arguments it wants passed. Your application code then executes the real function locally. You add the assistant's tool-request block and your function's result (as a `tool_result` message) to the conversation history, then send a second API request. The model reads the result and produces the final answer. The model never executes code itself — it only requests execution.
 
-</details>
+
 
 **Q2. "Why would you use streaming in a production application? What are the trade-offs?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 Streaming dramatically improves perceived latency. Without it, the user waits 5–30 seconds before seeing any output. With streaming, the first tokens appear within ~200ms, which feels interactive. The trade-off: streaming complicates error handling (you've already started writing to the UI when a mid-stream error occurs), makes it harder to post-process the full response before displaying it (e.g., filtering, parsing JSON), and usage stats only arrive at the end of the stream. For simple chat UIs, streaming is almost always worth it. For batch processing or when you need to validate the full response before showing it, non-streaming is simpler.
 
-</details>
+
 
 **Q3. "How do you handle rate limits in a production LLM application?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 Rate limits mean you've exceeded the provider's tokens-per-minute or requests-per-minute quota. The correct pattern is exponential backoff with jitter: catch the 429 error, wait 2^attempt seconds (plus a random 0–1s jitter to avoid thundering herd), and retry up to a maximum number of attempts. Most modern SDKs (Anthropic, OpenAI) have `max_retries` built in, so you often don't need to implement this manually. For high-throughput systems you also want to track your token usage against the rate limit budget and throttle proactively. At scale, a request queue with a leaky-bucket rate controller is the proper architecture.
 
-</details>
+
 
 **Q4. "How does a multi-turn conversation work under the hood? Why is it stateless?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 LLM APIs are stateless — every request is independent. There is no server-side session. To create a multi-turn conversation you maintain the full message history in your application and send it with every request. The model reads the entire history and produces the next reply. This means cost and latency grow with conversation length. In production you manage this by truncating old messages, summarizing older context, or using dedicated memory systems. The stateless design is intentional: it makes the API horizontally scalable and gives developers full control over what context the model sees.
 
-</details>
+
 
 **Q5. "What's the difference between `max_tokens` and the context window?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 `max_tokens` is a **hard cap on output length** — it limits how many tokens the model is allowed to generate in one response. The **context window** is the total token budget for a single forward pass, covering both input (system prompt + conversation history + tool definitions) and output combined. If your input is 3000 tokens and the context window is 4096, you have at most 1096 tokens available for output regardless of what `max_tokens` says. Setting `max_tokens` higher than the remaining context window budget has no effect — the model simply stops when the window fills.
 
-</details>
+
 
 **Q6. "How would you let an LLM access a live database during a conversation?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 I'd use tool calling. I'd define a tool schema for, say, `query_database` with parameters like `table`, `filter`, and `limit`. The model, when it needs data, outputs a `tool_use` block with its query intent. My code intercepts this, translates it into a safe SQL query (parameterized, never built from raw model output), executes it against the DB, and returns the rows as a JSON string in a `tool_result` block. The model then incorporates the data into its answer. Security is critical — always validate and sanitize tool inputs before execution; treat them like untrusted user input.
 
-</details>
+
 
 **Q7. "When comparing Claude and GPT-4 for a new chat feature, how do you approach the evaluation?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 I'd ask a few clarifying questions first: what's the primary use case, what's the volume and budget, do they have an existing cloud relationship, and are there data residency requirements? Technically, both are excellent for chat. Claude tends to excel at long-context tasks, nuanced instruction-following, and being more conservative about harmful outputs by default. GPT-4 has a broader ecosystem and more third-party integrations. For a new project I'd recommend a provider-flexible architecture: abstract the API call behind a thin provider interface so you can swap models without rewriting application logic. Then run an eval on your actual data before committing — benchmark differences on your specific task matter far more than general benchmarks.
 
-</details>
+
 
 **Q8. "Explain Server-Sent Events. Why does streaming use SSE rather than WebSockets?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 SSE (Server-Sent Events) is a one-directional HTTP-based protocol: the server holds open an HTTP/1.1 or HTTP/2 connection and pushes `data:` frames as they become available. It uses plain HTTP, works through proxies and firewalls, has automatic reconnect built into browsers, and requires no protocol upgrade. WebSockets are bidirectional and more complex to proxy/scale. For LLM streaming the communication is inherently one-directional (server → client) once the request is sent, making SSE the simpler and more robust choice. At the Python level you just iterate over the stream — the SSE framing is handled by the SDK.
 
-</details>
+
 
 **Q9. "What are the main error types you need to handle when calling an LLM API?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 I group them into three buckets. **Don't retry**: authentication errors (401 — fix the key), permission errors (403 — fix the plan/model), and validation errors (400 — fix the request shape). **Retry with backoff**: rate limit (429), service overloaded (529), and server errors (500). **Retry with a longer timeout or reduced payload**: timeout errors. In addition I watch for `stop_reason = "max_tokens"` which isn't an HTTP error but signals a truncated response, and `content_filter` which means the request was blocked by safety systems. Good production code wraps every API call in structured error handling with logging.
 
-</details>
+
 
 **Q10. "How do images affect token usage and cost?"**
 
-<details>
+
 <summary>Show answer</summary>
 
 Images are converted into tokens before processing — a typical 1024×1024 image costs roughly 1000–1700 input tokens depending on the provider's tiling strategy. These count against the context window and are billed as input tokens. For cost-sensitive applications this matters a lot: one image can cost as much as 1000+ words of text. Strategies to manage this: resize images before sending (smaller = fewer tokens), use lower-resolution thumbnails when full resolution isn't needed, and cache responses when the same image is repeatedly queried. Always confirm the per-image token cost in the provider's documentation for the specific model you're using.
 
-</details>
+
 
 ---
 
