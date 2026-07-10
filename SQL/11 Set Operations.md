@@ -1,4 +1,3 @@
-
 ## Set Operations
 
 Set operations combine the results of two or more SELECT queries. The queries involved must have The same number of columns. Compatible data types in corresponding columns.

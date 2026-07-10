@@ -70,6 +70,8 @@ A table is where Data is stored in Combination of rows and columns.
 | 3       | Sandeep Mahapatra | Mumbai       | 9152819324 | 23  |
 | 4       | Rima Das          | Karnataka    | 7404572742 | 29  |
 
-- **Schema**: The overall design of the database is called the database schema. This is a collection of **Tables**, which can be split and grouped according to logic.
+#### Schema: 
 
+- The overall design of the database is called the database schema. 
+- This is a collection of **Tables**, which can be split and grouped according to logic.
 - The collection of information stored in a the database at a particular moment is called an instance of the database.

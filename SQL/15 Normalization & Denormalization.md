@@ -59,3 +59,6 @@ Although normalization helps reduce redundancy and anomalies, it can lead to:
 - Complex queries requiring multiple joins.
 - Slower read performance due to excessive joins.
 - Increased CPU and memory usage for large datasets.
+
+---
+

@@ -2,21 +2,27 @@
 
 >[!Example] Types of SQL Commands
 
-DDL (Data Definition Language): 
+## DDL (Data Definition Language): 
+
 - To make Schema related changes/ design changes of the database/ table: 
 - DROP, CREATE, ALTER, TRUNCATE, RENAME, COMMENT, USE. (DR-CAT)
 
-DQL (Data Query Language) : SELECT
+## DQL (Data Query Language) :
 
-DML (Data Manipulation Language): 
+- SELECT
+
+## DML (Data Manipulation Language): 
 - To work on Values or instance of database.
 - SELECT, DELETE, INSERT, UPDATE.(DISU)
 
-DCL (Data Control Language):
+## DCL (Data Control Language):
 - GRANT(to give permission), REVOKE(to take permission).
 
-TCL (Transaction Control Language): 
+## TCL (Transaction Control Language): 
 - COMMIT, ROLLBACK, SAVEPOINT, SET TRANSACTION.
+
+---
+
 ## UPDATE (DML)
 
 Update (to update existing rows): The UPDATE statement is used to modify existing records in a table. You can update one or multiple columns in one or more rows based on a condition.
@@ -155,4 +161,154 @@ INSERT INTO employees (name, salary) VALUES ('Bob', 70000);
 
 ---
 
+- Modifying Tables: The ALTER TABLE statement is used to modify the structure of an existing table. You can add, drop, rename, change, or modify columns and constraints.
 
+Add a Column : 
+```sql
+ALTER TABLE table_name ADD column_name datatype;
+```
+
+Modify a Column :
+```sql
+ALTER TABLE table_name MODIFY column_name new_datatype;
+```
+
+Delete a Column 
+```sql
+ALTER TABLE table_name DROP COLUMN column_name;
+
+```
+
+Dropping Tables:To delete a table and its data:
+```sql
+DROP TABLE table_name; 
+```
+
+
+Adds a new column DateOfBirth of type DATE to the Employees table.
+
+```sql
+ALTER TABLE Employees ADD DateOfBirth DATE;
+```
+
+
+Filters employees whose department exists in the list of unique departments.
+```sql
+INSERT INTO emp_info 
+	VALUES (4, "Raj Bose", 25000), 
+		   (5, "Sushree", 15000);
+```
+
+---
+
+**Modifying Tables:** To make changes to an existing table:
+
+**1. Add a Column:** 
+```sql
+ALTER TABLE table_name ADD column_name datatype;
+```
+
+**2. Modify a Column:** 
+```sql
+ALTER TABLE table_name MODIFY column_name new_datatype;
+```
+
+**3. Delete a Column:**
+
+```sql
+ALTER TABLE table_name DROP COLUMN column_name;
+```
+
+- **Dropping Tables**  To delete a table and its data:
+```sql
+DROP TABLE table_name;
+```
+
+
+----
+## Do this exercise, and interact with the DB
+
+```sql
+
+ -- create database "college"
+CREATE DATABASE company; 
+
+ -- delete database "college"
+DROP DATABASE company;
+
+DROP DATABASE IF EXISTS company;
+
+ -- create database "college"
+CREATE DATABASE IF NOT EXISTS company; 
+
+-- Lists all databases available on the server.
+SHOW DATABASES;
+
+ --  use college DB for subsequent operations.
+USE company;
+
+CREATE TABLE IF NOT EXISTS Employee (
+	id INT PRIMARY KEY,
+	name VARCHAR(50),
+	salary BIGINT
+	);
+	
+```
+	
+**Syntax** 
+```sql
+INSERT INTO table_name (colname1, colname2)
+	VALUES 
+		(col1_v1, col2_v1),
+		(col1_v2, col2_v2);
+```
+
+
+```sql
+
+INSERT INTO Employee (id, name, salary) 
+	VALUES 
+		(4, "Soutick Samanta", 25000),
+		(5, "Tanmay Dey", 15000),
+		(6, "Abhishek Atta", 18000);
+
+
+INSERT INTO Employee 
+	VALUES 
+		(4, "Shovan Bera", 25000), 
+		(5, "Sushree", 15000);
+
+
+-- Lists all tables in selected database.
+SHOW TABLES;
+```
+
+```sql
+-- Select & View ALL columns:
+SELECT * FROM Employee; 
+```
+
+
+| id  | name            | Salary |
+| --- | --------------- | ------ |
+| 4   | Soutick Samanta | 25000  |
+| 5   | Tanmay Dey      | 15000  |
+| 6   | Abhishek Atta   | 18000  |
+| 4   | Shovan Bera     | 25000  |
+| 5   | Sushree         | 15000  |
+
+---
+
+**1. Add a new constraint:** (needs to verify)
+```sql
+ALTER TABLE Employee ADD CONSTRAINT age INT (age);
+```
+
+---
+**2. Drop a constraint:**
+
+```sql
+ALTER TABLE table_name DROP CONSTRAINT constraint_name;
+
+ALTER TABLE Employees DROP COLUMN Department;
+```

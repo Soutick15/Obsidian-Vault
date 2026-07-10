@@ -2,16 +2,16 @@
 
 **Constraints** in SQL specify rules on the data in a table, ensuring accuracy, reliability, and integrity. 
 
-**SQL Constraints == Column Attributes)**
+SQL Constraints == Column Attributes)
 
 **Types of SQL Constraints:**
 
-- **NOT NULL:** Ensures a column cannot have NULL values.
-- **UNIQUE:** Ensures all values in a column are distinct.
-- **PRIMARY KEY:** Uniquely identifies each row in a table.
-- **FOREIGN KEY:** Ensures referential integrity by linking to a primary key in another table.
-- **CHECK:** Ensures that all values in a column satisfy a specific condition.
-- **DEFAULT:** Sets a default value for a column when no value is specified.
+- `NOT NULL` : Ensures a column cannot have NULL values.
+- `UNIQUE` : Ensures all values in a column are distinct.
+- `PRIMARY KEY` : Uniquely identifies each row in a table.
+- `FOREIGN KEY` : Ensures referential integrity by linking to a primary key in another table.
+- `CHECK` : Ensures that all values in a column satisfy a specific condition.
+- `DEFAULT` : Sets a default value for a column when no value is specified.
 ---
 ## NOT NULL : 
 
