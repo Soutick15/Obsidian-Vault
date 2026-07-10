@@ -11,7 +11,7 @@ FRAMEWORK: Quarkus 3.30.6
 
 PURPOSE:
 The Master Data Management (MDM) core service. Acts as the central, authoritative
-source of truth for all legal content in the NyAi ecosystem. It manages the legal
+source of truth for all legal content in the ComplianceManagementSystem ecosystem. It manages the legal
 hierarchy (Acts → Rules/Regulations → Provisions → Obligations). It also manages
 tenant onboarding into the MDM ecosystem and issues OAuth client credentials for
 them to pull data.
@@ -39,7 +39,7 @@ Enables a publish/subscribe model for regulatory updates via a pull-based OAuth2
 ## 2. PACKAGE ANALYSIS
 ================================================================================
 
-### Package: com.nyai.mdm.controller
+### Package: com.ComplianceManagementSystem.mdm.controller
 - TenantController.java — Tenant CRUD, Act assignment, OAuth client generation.
 - LegalDocumentController.java — Acts, Rules, Regulations CRUD and hierarchy traversal.
 - ProvisionsController.java — Provision management.
@@ -47,7 +47,7 @@ Enables a publish/subscribe model for regulatory updates via a pull-based OAuth2
 - OAuthController.java — RFC 6749 Token Endpoint (`/token`), Introspect, Revoke.
 - AuthController.java — Admin/SME login to MDM dashboard.
 
-### Package: com.nyai.mdm.model & .entity
+### Package: com.ComplianceManagementSystem.mdm.model & .entity
 - LegalDocument.java — Represents an Act, Rule, or Regulation.
 - Provision.java — Represents a section/chapter of a document.
 - Obligation.java — The actual compliance requirement derived from a provision.
@@ -55,19 +55,19 @@ Enables a publish/subscribe model for regulatory updates via a pull-based OAuth2
 - OAuthClient.java, OAuthAccessToken.java — MDM acting as an Authorization Server.
 - TenantActAssignment.java — Maps which acts a tenant is subscribed to.
 
-### Package: com.nyai.mdm.repository
+### Package: com.ComplianceManagementSystem.mdm.repository
 - LegalDocumentRepository.java — Uses Panache + Native SQL queries.
 - ProvisionRepository.java
 - ObligationRepository.java
 - TenantRepository.java
 - OAuthClientRepository.java
 
-### Package: com.nyai.mdm.security
+### Package: com.ComplianceManagementSystem.mdm.security
 - JwtAuthenticationFilter.java — Validates JWT tokens from requests.
 - AuthorizationMiddleware.java — Enforces RBAC permissions based on UserRole.
 - JwtTokenProvider.java — Validates self-issued tokens (for SMEs/Admins).
 
-### Package: com.nyai.mdm.interceptor
+### Package: com.ComplianceManagementSystem.mdm.interceptor
 - ChangeLogInterceptor.java — `@AroundInvoke` interceptor on service methods to track mutations.
 - @ChangeLogged — Annotation marker.
 

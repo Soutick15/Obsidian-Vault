@@ -1,5 +1,5 @@
 """
-Day 4 Lab — Reusable Prompt Library (SOLUTION)
+Day 4 Lab — Prompt Library (SOLUTION)
 
 Run with:
     python solution.py                          # mock (no key needed)
@@ -10,6 +10,7 @@ Run with:
 
 import json
 import os
+import re
 
 # ---------------------------------------------------------------------------
 # Attempt to load .env (optional — works if python-dotenv is installed)
@@ -23,7 +24,7 @@ except ImportError:
 
 
 # ===========================================================================
-# SECTION 1 — Prompt builder functions
+# SECTION 1 — Prompt builders
 # Each returns a list of message dicts: [{"role": ..., "content": ...}]
 # ===========================================================================
 
@@ -42,13 +43,13 @@ def few_shot_classify(text: str, examples: list[dict], labels: list[str]) -> lis
     """
     label_list = ", ".join(labels)
     example_block = "\n".join(
-        f'Review: "{ex["input"]}" → {ex["label"]}' for ex in examples
+        f'Review: "{ex["input"]}" -> {ex["label"]}' for ex in examples
     )
     user_content = (
         f"Classify the review below as exactly one of: {label_list}.\n"
         f"Return ONLY the label — no explanation, no punctuation.\n\n"
         f"Examples:\n{example_block}\n\n"
-        f'Review: "{text}" →'
+        f'Review: "{text}" ->'
     )
     return [{"role": "user", "content": user_content}]
 
@@ -73,51 +74,6 @@ def extract_json(text: str, fields: list[str]) -> list[dict]:
         f"Return ONLY a valid JSON object — no markdown fences, no explanation.\n\n"
         f"Example shape:\n{example_obj}\n\n"
         f"<document>\n{text}\n</document>"
-    )
-    return [{"role": "user", "content": user_content}]
-
-
-def summarize(text: str, bullets: int = 3) -> list[dict]:
-    """
-    Build a messages list for bullet-point summarisation.
-
-    Args:
-        text:    Text to summarise.
-        bullets: Number of bullet points (default 3).
-
-    Returns:
-        messages list for run().
-    """
-    user_content = (
-        f"Summarise the document below in exactly {bullets} bullet points.\n"
-        f"Each bullet must be ≤ 20 words. Do not add preamble or closing remarks.\n\n"
-        f"<document>\n{text}\n</document>"
-    )
-    return [{"role": "user", "content": user_content}]
-
-
-def rewrite(
-    text: str, style: str = "concise and formal", max_pct: int = 80
-) -> list[dict]:
-    """
-    Build a messages list for style-directed text rewriting.
-
-    Args:
-        text:    Text to rewrite.
-        style:   Target style.
-        max_pct: Maximum output length as % of input word count.
-
-    Returns:
-        messages list for run().
-    """
-    word_count = len(text.split())
-    max_words = max(1, int(word_count * max_pct / 100))
-    user_content = (
-        f"Rewrite the text below to be {style}.\n"
-        f"Keep all factual content. Output must be ≤ {max_words} words "
-        f"({max_pct}% of original {word_count} words).\n"
-        f"Do not add preamble or closing remarks.\n\n"
-        f"<original>\n{text}\n</original>"
     )
     return [{"role": "user", "content": user_content}]
 
@@ -157,15 +113,13 @@ def _mock_response(messages: list[dict], system: str) -> str:
     Return a plausible response without any API call.
     Inspects the last user message to decide what to produce.
     """
-    import re
-
     last_content = messages[-1]["content"] if messages else ""
 
-    # --- Classification: prompt ends with '→' (no label yet) ---
-    if "→" in last_content:
-        lines = [ln.strip() for ln in last_content.splitlines() if "→" in ln]
+    # --- Classification: prompt ends with '->' (no label yet) ---
+    if "->" in last_content:
+        lines = [ln.strip() for ln in last_content.splitlines() if "->" in ln]
         last_line = lines[-1] if lines else ""
-        if last_line.endswith("→"):
+        if last_line.endswith("->"):
             target = last_line.lower()
             if any(
                 w in target
@@ -210,31 +164,6 @@ def _mock_response(messages: list[dict], system: str) -> str:
             }
         )
 
-    # --- Summarisation ---
-    if (
-        "bullet" in last_content.lower()
-        or "summarise" in last_content.lower()
-        or "summarize" in last_content.lower()
-    ):
-        # Extract document content from <document>...</document>
-        doc_match = re.search(
-            r"<document>\s*(.*?)\s*</document>", last_content, re.DOTALL
-        )
-        snippet = (doc_match.group(1) if doc_match else last_content)[:80].replace(
-            "\n", " "
-        )
-        return f"[MOCK SUMMARY] {snippet}..."
-
-    # --- Rewrite ---
-    if "rewrite" in last_content.lower() or "<original>" in last_content:
-        orig_match = re.search(
-            r"<original>\s*(.*?)\s*</original>", last_content, re.DOTALL
-        )
-        snippet = (orig_match.group(1) if orig_match else last_content)[:80].replace(
-            "\n", " "
-        )
-        return f"[MOCK REWRITE] {snippet}..."
-
     return "[MOCK] No specific handler matched."
 
 
@@ -248,10 +177,10 @@ def run(messages: list[dict], system: str = "You are a helpful assistant.") -> s
     Send messages to the best available provider.
 
     Detection order:
-      1. USE_MOCK=true  → deterministic mock (no API call)
-      2. ANTHROPIC_API_KEY present → Claude (claude-haiku-4-5)
-      3. OPENAI_API_KEY present    → OpenAI (gpt-5-mini)
-      4. Fallback                  → deterministic mock
+      1. USE_MOCK=true  -> deterministic mock (no API call)
+      2. ANTHROPIC_API_KEY present -> Claude (claude-haiku-4-5)
+      3. OPENAI_API_KEY present    -> OpenAI (gpt-5.4-mini)
+      4. Fallback                  -> deterministic mock
 
     Args:
         messages: List of {"role": ..., "content": ...} dicts.
@@ -288,7 +217,7 @@ def run(messages: list[dict], system: str = "You are a helpful assistant.") -> s
             client = OpenAI(api_key=openai_key)
             full_msgs = [{"role": "system", "content": system}] + messages
             response = client.chat.completions.create(
-                model="gpt-5-mini",
+                model="gpt-5.4-mini",
                 max_tokens=512,
                 messages=full_msgs,
             )
@@ -348,32 +277,6 @@ def demo():
     print("--- extract_json ---")
     print(f'Input   : "{email_text}"')
     print(f"Parsed  : {parsed}\n")
-
-    # --- summarize ---
-    article = (
-        "Artificial intelligence is transforming industries from healthcare to finance. "
-        "Recent advances in large language models have enabled applications that were "
-        "impossible five years ago, including automated document analysis, code generation, "
-        "and real-time translation. However, concerns around data privacy, bias, and "
-        "energy consumption remain active areas of research and regulation."
-    )
-    msgs = summarize(article, bullets=3)
-    result = run(msgs, system="You are a concise summariser.")
-    print("--- summarize ---")
-    print(f"Input   : {len(article)} chars")
-    print(f"Result  : {result.strip()}\n")
-
-    # --- rewrite ---
-    verbose = (
-        "I am writing to you in order to let you know that it would be greatly "
-        "appreciated if you could provide us with your feedback at your earliest "
-        "possible convenience."
-    )
-    msgs = rewrite(verbose, style="concise and formal", max_pct=60)
-    result = run(msgs, system="You are a professional editor.")
-    print("--- rewrite ---")
-    print(f"Input   : {len(verbose)} chars")
-    print(f"Result  : {result.strip()}\n")
 
     print("All demos complete.")
 

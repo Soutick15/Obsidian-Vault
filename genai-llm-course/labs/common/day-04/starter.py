@@ -1,14 +1,23 @@
 """
-Day 4 Lab — Reusable Prompt Library (STARTER)
+Day 4 Lab — Prompt Library (STARTER)
 
-Complete all five TODO blocks. Run with:
-    python starter.py              # mock (no key needed)
-    ANTHROPIC_API_KEY=... python starter.py
-    OPENAI_API_KEY=...   python starter.py
+The mock LLM client, the run() helper, and the safe JSON parser are already
+written below — you don't need to touch them. Your job is the three TODOs:
+(1) write a few-shot classification prompt, (2) write a JSON-extraction
+prompt, and (3) call the safe JSON parser in the demo (TODO 3, near the
+bottom of this file). See Day 4, Section 3 (Worked Example) in the
+curriculum for the pattern to follow.
+
+Run with:
+    python starter.py                          # mock (no key needed)
+    ANTHROPIC_API_KEY=sk-ant-... python starter.py
+    OPENAI_API_KEY=sk-...        python starter.py
+    USE_MOCK=true                python starter.py  # force mock even with key
 """
 
 import json
 import os
+import re
 
 # ---------------------------------------------------------------------------
 # Attempt to load .env (optional — works if python-dotenv is installed)
@@ -22,100 +31,51 @@ except ImportError:
 
 
 # ===========================================================================
-# SECTION 1 — Prompt builder functions
-# Each function returns a list of message dicts: [{"role": ..., "content": ...}]
-# The caller passes this list to run() together with a system string.
+# SECTION 1 — Prompt builders
+# Each returns a list of message dicts: [{"role": ..., "content": ...}]
 # ===========================================================================
 
 
 def few_shot_classify(text: str, examples: list[dict], labels: list[str]) -> list[dict]:
     """
-    Build a messages list for few-shot sentiment/topic classification.
+    Build a messages list for few-shot classification.
 
     Args:
-        text:     The input text to classify.
-        examples: List of dicts with keys "input" and "label".
-                  E.g. [{"input": "Great product!", "label": "POSITIVE"}, ...]
-        labels:   Allowed label strings. E.g. ["POSITIVE", "NEGATIVE", "NEUTRAL"]
+        text:     The input to classify.
+        examples: List of {"input": ..., "label": ...} dicts.
+        labels:   Allowed label strings.
 
     Returns:
-        A messages list ready to pass to run().
-
-    TODO 1:
-        - Format the examples as lines: 'Review: "<input>" → <label>'
-        - Append the target text as: 'Review: "<text>" →'
-        - Wrap everything in a single user message.
-        - Include the allowed labels in the instruction.
+        messages list for run().
     """
-    # TODO 1 — replace the line below with your implementation
+    # TODO 1 — build and return the messages list. Follow Day 4, Section 3:
+    #   - Join `labels` with commas; instruct: "Classify ... as exactly one
+    #     of: <labels>." and "Return ONLY the label — no explanation."
+    #   - One line per example:  'Review: "<input>" -> <label>'
+    #   - End with the target line (no label after the arrow): 'Review: "<text>" ->'
+    #   - Return  [{"role": "user", "content": <the text you built>}]
     raise NotImplementedError("TODO 1: implement few_shot_classify")
 
 
 def extract_json(text: str, fields: list[str]) -> list[dict]:
     """
-    Build a messages list that instructs the model to extract named fields
-    from text and return them as a JSON object.
+    Build a messages list for structured JSON extraction.
 
     Args:
-        text:   The source text (e.g. an email body).
-        fields: Field names to extract. E.g. ["sender_name", "sender_email", "date"]
-                If a field is not found, the model should use null.
+        text:   Source text.
+        fields: Field names to extract; use null if not found.
 
     Returns:
-        A messages list ready to pass to run().
-
-    TODO 2:
-        - List the fields in the prompt.
-        - Wrap text in <document>...</document> delimiters.
-        - Instruct: return ONLY a JSON object, no markdown, no explanation.
-        - Add a one-line example of the expected JSON shape.
+        messages list for run().
     """
-    # TODO 2 — replace the line below with your implementation
+    # TODO 2 — build and return the messages list. Follow Day 4, Section 2.6:
+    #   - List the field names in the instruction.
+    #   - Instruct: "Return ONLY a valid JSON object — no markdown fences,
+    #     no explanation." and "If a field is not present, use null."
+    #   - Show a one-line example shape: {"<field>": null, ...}
+    #   - Wrap the source text in <document>...</document> delimiters.
+    #   - Return  [{"role": "user", "content": <the text you built>}]
     raise NotImplementedError("TODO 2: implement extract_json")
-
-
-def summarize(text: str, bullets: int = 3) -> list[dict]:
-    """
-    Build a messages list for bullet-point summarisation.
-
-    Args:
-        text:    The text to summarise.
-        bullets: Number of bullet points to produce.
-
-    Returns:
-        A messages list ready to pass to run().
-
-    TODO 3:
-        - Instruct the model to produce exactly <bullets> bullet points.
-        - Each bullet ≤ 20 words.
-        - Wrap text in <document>...</document> delimiters.
-    """
-    # TODO 3 — replace the line below with your implementation
-    raise NotImplementedError("TODO 3: implement summarize")
-
-
-def rewrite(
-    text: str, style: str = "concise and formal", max_pct: int = 80
-) -> list[dict]:
-    """
-    Build a messages list for text rewriting.
-
-    Args:
-        text:    The text to rewrite.
-        style:   Target style description.
-        max_pct: Maximum output length as % of input word count.
-
-    Returns:
-        A messages list ready to pass to run().
-
-    TODO 4:
-        - Instruct the model to rewrite to the given style.
-        - Cap at max_pct% of original word count.
-        - Keep all factual content; only change style/length.
-        - Wrap original text in <original>...</original> delimiters.
-    """
-    # TODO 4 — replace the line below with your implementation
-    raise NotImplementedError("TODO 4: implement rewrite")
 
 
 # ===========================================================================
@@ -126,7 +86,7 @@ def rewrite(
 def parse_json_safe(text: str, fallback: dict | None = None) -> dict:
     """
     Parse LLM output as JSON, stripping markdown fences if present.
-    Returns fallback dict on parse failure (never raises).
+    Returns fallback dict on parse failure — never raises.
     """
     try:
         t = text.strip()
@@ -144,74 +104,72 @@ def parse_json_safe(text: str, fallback: dict | None = None) -> dict:
 
 
 # ===========================================================================
-# SECTION 3 — Provider-flexible runner
+# SECTION 3 — Deterministic mock
 # ===========================================================================
 
 
 def _mock_response(messages: list[dict], system: str) -> str:
     """
-    Deterministic mock that returns plausible output based on the last
-    user message content — no API call needed.
+    Return a plausible response without any API call.
+    Inspects the last user message to decide what to produce.
     """
     last_content = messages[-1]["content"] if messages else ""
 
-    # Classification: look for the "→" pattern at the end
-    if "→" in last_content and "POSITIVE" in last_content:
-        # Count examples to detect the target (last "→" with no label)
-        lines = [ln for ln in last_content.splitlines() if "→" in ln]
+    # --- Classification: prompt ends with '->' (no label yet) ---
+    if "->" in last_content:
+        lines = [ln.strip() for ln in last_content.splitlines() if "->" in ln]
         last_line = lines[-1] if lines else ""
-        if last_line.strip().endswith("→"):
-            # Heuristic: pick label based on keywords
+        if last_line.endswith("->"):
             target = last_line.lower()
             if any(
                 w in target
-                for w in ["late", "damage", "broken", "disappoint", "bad", "poor"]
+                for w in [
+                    "late",
+                    "damag",
+                    "broken",
+                    "disappoint",
+                    "bad",
+                    "poor",
+                    "terrible",
+                    "worst",
+                ]
             ):
                 return "NEGATIVE"
             if any(
                 w in target
-                for w in ["great", "love", "excellent", "amazing", "perfect"]
+                for w in [
+                    "great",
+                    "love",
+                    "excellent",
+                    "amazing",
+                    "perfect",
+                    "fantastic",
+                ]
             ):
                 return "POSITIVE"
             return "NEUTRAL"
 
-    # JSON extraction: return a plausible JSON object
+    # --- JSON extraction: prompt mentions JSON object + fields ---
     if "JSON object" in last_content or "json" in system.lower():
-        import re
-
-        # Try to extract an email address from the text
         email_match = re.search(r"[\w.+-]+@[\w-]+\.\w+", last_content)
         date_match = re.search(r"\d{4}-\d{2}-\d{2}", last_content)
-        name_match = re.search(
-            r"Dr\.?\s+\w+|Mr\.?\s+\w+|Ms\.?\s+\w+|\b([A-Z][a-z]+\s[A-Z][a-z]+)\b",
-            last_content,
-        )
+        name_match = re.search(r"Dr\.?\s+\w+|Mr\.?\s+\w+|Ms\.?\s+\w+", last_content)
+        topic_match = re.search(r"discuss\s+(.+?)(?:\.|$)", last_content, re.IGNORECASE)
         return json.dumps(
             {
                 "sender_name": name_match.group(0).strip() if name_match else None,
                 "sender_email": email_match.group(0) if email_match else None,
                 "meeting_date": date_match.group(0) if date_match else None,
-                "meeting_topic": "Q3 budget"
-                if "budget" in last_content.lower()
-                else None,
+                "meeting_topic": topic_match.group(1).strip() if topic_match else None,
             }
         )
 
-    # Summarise
-    if (
-        "bullet" in last_content.lower()
-        or "summarise" in last_content.lower()
-        or "summarize" in last_content.lower()
-    ):
-        first_80 = last_content[:80].replace("\n", " ").strip()
-        return f"[MOCK SUMMARY] {first_80}..."
-
-    # Rewrite
-    if "rewrite" in last_content.lower() or "<original>" in last_content:
-        first_80 = last_content[:80].replace("\n", " ").strip()
-        return f"[MOCK REWRITE] {first_80}..."
-
     return "[MOCK] No specific handler matched."
+
+
+# ===========================================================================
+# SECTION 4 — Provider-flexible runner
+# ===========================================================================
 
 
 def run(messages: list[dict], system: str = "You are a helpful assistant.") -> str:
@@ -219,34 +177,61 @@ def run(messages: list[dict], system: str = "You are a helpful assistant.") -> s
     Send messages to the best available provider.
 
     Detection order:
-      1. ANTHROPIC_API_KEY in env  → use Claude (claude-haiku-4-5)
-      2. OPENAI_API_KEY in env     → use OpenAI (gpt-5-mini)
-      3. Neither (or USE_MOCK=true) → return deterministic mock response
+      1. USE_MOCK=true  -> deterministic mock (no API call)
+      2. ANTHROPIC_API_KEY present -> Claude (claude-haiku-4-5)
+      3. OPENAI_API_KEY present    -> OpenAI (gpt-5.4-mini)
+      4. Fallback                  -> deterministic mock
 
     Args:
-        messages: List of {"role": ..., "content": ...} dicts (user/assistant only).
+        messages: List of {"role": ..., "content": ...} dicts.
         system:   System prompt string.
 
     Returns:
-        The model's reply as a plain string.
-
-    TODO 5:
-        - If USE_MOCK env var == "true", call _mock_response() and return.
-        - Check ANTHROPIC_API_KEY; if present, import anthropic and call
-          client.messages.create() with model="claude-haiku-4-5", max_tokens=512.
-          Return response.content[0].text.
-        - Check OPENAI_API_KEY; if present, import openai and call
-          client.chat.completions.create() with model="gpt-5-mini", max_tokens=512.
-          Prepend {"role":"system","content": system} to the messages list.
-          Return response.choices[0].message.content.
-        - Fallback: call _mock_response() and return the result.
+        Model reply as a plain string.
     """
-    # TODO 5 — replace the line below with your implementation
-    raise NotImplementedError("TODO 5: implement run()")
+    if os.getenv("USE_MOCK", "").lower() == "true":
+        return _mock_response(messages, system)
+
+    anthropic_key = os.getenv("ANTHROPIC_API_KEY")
+    if anthropic_key:
+        try:
+            import anthropic
+
+            client = anthropic.Anthropic(api_key=anthropic_key)
+            response = client.messages.create(
+                model="claude-haiku-4-5",
+                max_tokens=512,
+                system=system,
+                messages=messages,
+            )
+            return response.content[0].text
+        except Exception as exc:
+            print(f"[WARN] Anthropic API call failed: {exc}. Falling back to mock.")
+            return _mock_response(messages, system)
+
+    openai_key = os.getenv("OPENAI_API_KEY")
+    if openai_key:
+        try:
+            from openai import OpenAI
+
+            client = OpenAI(api_key=openai_key)
+            full_msgs = [{"role": "system", "content": system}] + messages
+            response = client.chat.completions.create(
+                model="gpt-5.4-mini",
+                max_tokens=512,
+                messages=full_msgs,
+            )
+            return response.choices[0].message.content
+        except Exception as exc:
+            print(f"[WARN] OpenAI API call failed: {exc}. Falling back to mock.")
+            return _mock_response(messages, system)
+
+    # No key detected — use mock
+    return _mock_response(messages, system)
 
 
 # ===========================================================================
-# Demo — runs all four prompt builders and prints results
+# Demo
 # ===========================================================================
 
 
@@ -288,36 +273,12 @@ def demo():
     fields = ["sender_name", "sender_email", "meeting_date", "meeting_topic"]
     msgs = extract_json(email_text, fields)
     raw = run(msgs, system="You extract structured data. Return only JSON.")
-    parsed = parse_json_safe(raw, fallback={f: None for f in fields})
+    # TODO 3 — call the safe parser on `raw`, with a fallback mapping every
+    # field in `fields` to None (so downstream code always gets the keys).
+    parsed = None  # replace with: parse_json_safe(raw, fallback={f: None for f in fields})
     print("--- extract_json ---")
     print(f'Input   : "{email_text}"')
     print(f"Parsed  : {parsed}\n")
-
-    # --- summarize ---
-    article = (
-        "Artificial intelligence is transforming industries from healthcare to finance. "
-        "Recent advances in large language models have enabled applications that were "
-        "impossible five years ago, including automated document analysis, code generation, "
-        "and real-time translation. However, concerns around data privacy, bias, and "
-        "energy consumption remain active areas of research and regulation."
-    )
-    msgs = summarize(article, bullets=3)
-    result = run(msgs, system="You are a concise summariser.")
-    print("--- summarize ---")
-    print(f"Input   : {len(article)} chars")
-    print(f"Result  : {result.strip()}\n")
-
-    # --- rewrite ---
-    verbose = (
-        "I am writing to you in order to let you know that it would be greatly "
-        "appreciated if you could provide us with your feedback at your earliest "
-        "possible convenience."
-    )
-    msgs = rewrite(verbose, style="concise and formal", max_pct=60)
-    result = run(msgs, system="You are a professional editor.")
-    print("--- rewrite ---")
-    print(f"Input   : {len(verbose)} chars")
-    print(f"Result  : {result.strip()}\n")
 
     print("All demos complete.")
 

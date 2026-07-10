@@ -11,7 +11,7 @@ DATABASE: compliance_dev (Azure PostgreSQL, SHARED with auth/ai)
 ================================================================================
 
 PURPOSE:
-The central business logic engine of the NyAi compliance platform. Handles all
+The central business logic engine of the ComplianceManagementSystem platform. Handles all
 tenant-facing compliance management, task lifecycle, entity/department management,
 subscription sync with MDM, rule engine evaluation, and data source management.
 
@@ -41,11 +41,11 @@ automated recurrence, overdue detection, applicability evaluation, and evidence 
 ## 2. PACKAGE ANALYSIS
 ================================================================================
 
-### Package: com.nyai
-- NyaiApplication.java — @QuarkusMain entry point, OpenAPI definition
+### Package: com.ComplianceManagementSystem
+- ComplianceManagementSystemApplication.java — @QuarkusMain entry point, OpenAPI definition
 - Dependencies: Quarkus runtime, MicroProfile OpenAPI
 
-### Package: com.nyai.controller (21 files + 5 subdirs)
+### Package: com.ComplianceManagementSystem.controller (21 files + 5 subdirs)
 PURPOSE: JAX-RS REST endpoints for all tenant-facing APIs
 CONTROLLERS:
   - TaskResource.java (25KB) — /v1/core/tasks/** — Largest controller
@@ -78,7 +78,7 @@ SUBDIRECTORIES:
   - settings/ — SettingsController.java
   - subscription/ — UnifiedSubscriptionController.java, SubscriptionCleanupController.java
 
-### Package: com.nyai.entity (58 files)
+### Package: com.ComplianceManagementSystem.entity (58 files)
 PURPOSE: JPA entities mapped to PostgreSQL tables
 CRITICAL ENTITIES:
   - Task.java (12KB) — Core compliance task with recurrence, JSONB fields
@@ -102,7 +102,7 @@ CRITICAL ENTITIES:
   - ComplianceExistingData.java (8KB) — Imported legacy compliance data
   - QuestionnaireQuestion.java, QuestionnaireResponse.java, etc. — Questionnaire subsystem
 
-### Package: com.nyai.repository (58 files)
+### Package: com.ComplianceManagementSystem.repository (58 files)
 PURPOSE: Panache repositories for database access
 CRITICAL:
   - TaskRepository.java (38KB) — Largest repository, complex queries with JPQL/native SQL
@@ -113,7 +113,7 @@ CRITICAL:
   - DepartmentActRepository.java (7KB) — Act-department mapping queries
   - BaseRepository.java (6KB) — Abstract base with common query patterns
 
-### Package: com.nyai.scheduler (9 files)
+### Package: com.ComplianceManagementSystem.scheduler (9 files)
 PURPOSE: Quarkus @Scheduled background jobs
 FILES:
   1. SubscriptionSyncScheduler.java — @Scheduled(every="10m") — MDM data sync
@@ -126,7 +126,7 @@ FILES:
   8. RuleEngineMaterializationScheduler.java — @Scheduled(every="5m") [DISABLED] — Rule engine evaluation
   9. LogCleanupScheduler.java — @Scheduled(every="1h") — Purge old application logs
 
-### Package: com.nyai.security (9 files)
+### Package: com.ComplianceManagementSystem.security (9 files)
 PURPOSE: JWT validation, RBAC, request filtering
 FILES:
   - CookieAuthRequestFilter.java — @PreMatching filter, extracts JWT from HttpOnly cookie
@@ -139,13 +139,13 @@ FILES:
   - CookieEntityResolver.java — Resolves entity ID from cookie
   - RequiresPermission.java — Custom annotation (marker)
 
-### Package: com.nyai.client (REST clients)
+### Package: com.ComplianceManagementSystem.client (REST clients)
 - ComplianceAiClient.java — @RegisterRestClient for compliance-ai internal API
 - SubscriptionClient.java — @RegisterRestClient for mdm-subscriptions
 - MdmActClient.java — @RegisterRestClient for mdm-subscriptions act APIs
 - OAuthClient.java — OAuth token endpoint client
 
-### Package: com.nyai.service (33 files + 5 subdirs)
+### Package: com.ComplianceManagementSystem.service (33 files + 5 subdirs)
 PURPOSE: Business logic layer
 CRITICAL:
   - TaskService.java — Task CRUD interface
@@ -164,13 +164,13 @@ SUBDIRECTORIES:
   - subscription/ — SnapshotProcessingService, SubscriptionSyncServiceImpl
   - task/ — TaskInstanceMaterializationService
 
-### Package: com.nyai.audit
+### Package: com.ComplianceManagementSystem.audit
 - EntityAuditObserver.java — CDI @Observes(AFTER_SUCCESS) transactional audit
 - EntityAuditEvent.java — CDI event payload
 
-### Package: com.nyai.config, com.nyai.constants, com.nyai.context,
-   com.nyai.dto, com.nyai.enums, com.nyai.event, com.nyai.exception,
-   com.nyai.logging, com.nyai.util
+### Package: com.ComplianceManagementSystem.config, com.ComplianceManagementSystem.constants, com.ComplianceManagementSystem.context,
+   com.ComplianceManagementSystem.dto, com.ComplianceManagementSystem.enums, com.ComplianceManagementSystem.event, com.ComplianceManagementSystem.exception,
+   com.ComplianceManagementSystem.logging, com.ComplianceManagementSystem.util
 Standard supporting packages for configuration, DTOs, enums, exceptions, and utilities.
 
 ================================================================================
@@ -560,7 +560,7 @@ DESIGN: Represents a legal act/legislation (hierarchical: Act → Compliance →
 FILE: application-dev.properties
 KEY CONFIGURATIONS:
   quarkus.http.port=8080
-  quarkus.datasource.jdbc.url=jdbc:postgresql://nyai-metadata-db-dev.postgres.database.azure.com:5432/compliance_dev
+  quarkus.datasource.jdbc.url=jdbc:postgresql://ComplianceManagementSystem-metadata-db-dev.postgres.database.azure.com:5432/compliance_dev
   quarkus.datasource.jdbc.min-size=5, max-size=20
   quarkus.hibernate-orm.database.generation=none (schema managed externally)
   quarkus.transaction-manager.default-transaction-timeout=1800 (30 minutes!)
@@ -570,8 +570,8 @@ KEY CONFIGURATIONS:
   falkordb.host=localhost, falkordb.port=6379
   quarkus.http.cors.origins=http://localhost:3000,http://127.0.0.1:3000
   quarkus.tls.trust-all=true (DEV ONLY — security risk in prod)
-  oauth.service.url=https://mdm.dev.nyai.ai/mdm-core
-  subscription.service.url=https://mdm.dev.nyai.ai/mdm-subscriptions
+  oauth.service.url=https://mdm.dev.ComplianceManagementSystem.ai/mdm-core
+  subscription.service.url=https://mdm.dev.ComplianceManagementSystem.ai/mdm-subscriptions
 
 CONFIGURABLE SCHEDULER CRONS:
   task.recurrence.cron = 0 0 1 * * ? (1 AM daily)

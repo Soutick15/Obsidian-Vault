@@ -6,6 +6,10 @@ A provider-flexible CLI assistant that demonstrates:
   2. Streaming responses (token-by-token output)
   3. Tool calling (calculator round-trip)
 
+See curriculum/common/Day-05-apis-streaming-tools.md, Section 3 (Worked
+Example), for a step-by-step walkthrough of the exact request/reply and
+tool-call round trip this file wires into a chat loop.
+
 Provider detection (in priority order):
   ANTHROPIC_API_KEY set -> use real Claude API
   OPENAI_API_KEY set    -> use real OpenAI API
@@ -139,6 +143,12 @@ def safe_calculate(expression: str) -> str:
 
 # ---------------------------------------------------------------------------
 # MOCK client -- no API key needed
+#
+# Mirrors the two-step shape of a real API call (Section 2.3 / Section 3):
+#   1. mock_check_for_tool_call(...)  -- stands in for checking
+#      response.stop_reason == "tool_use" on the first (non-streaming) call.
+#   2. mock_stream_answer(...)        -- stands in for client.messages.stream(...)
+#      on the second call, once the tool result is known.
 # ---------------------------------------------------------------------------
 
 
@@ -162,45 +172,78 @@ def _extract_math_expression(text: str):
     return None
 
 
-def mock_stream_and_call_tool(messages: list, system: str):
+def mock_check_for_tool_call(history: list):
     """
-    Deterministic mock that:
-    - If the last user message looks like a maths question, simulates a tool-call
-      turn followed by a streaming answer.
-    - Otherwise streams a generic helpful reply word-by-word.
-
-    Yields: ('text', chunk_str) or ('tool_call', expr_str) events.
+    Looks at the most recent user message and returns an arithmetic
+    expression string if it looks like a maths question (e.g. "45 * 3 + 17"),
+    or None otherwise.
     """
     last_user = next(
-        (m["content"] for m in reversed(messages) if m["role"] == "user"), ""
+        (m["content"] for m in reversed(history) if m["role"] == "user"), ""
     )
+    return _extract_math_expression(last_user)
 
-    expr = _extract_math_expression(last_user)
 
-    if expr:
-        # Simulate tool call
-        yield ("tool_call", expr)
-        result = safe_calculate(expr)
-        # Simulate streaming of the final answer
-        answer = f"The result of {expr} is {result}."
-        for word in answer.split():
-            yield ("text", word + " ")
-            time.sleep(0.04)
+def mock_stream_answer(history: list, system: str, tool_expr=None, tool_result=None):
+    """
+    Returns a generator of text chunks ("words") that make up the final
+    answer. If tool_expr/tool_result are given, the answer reports the
+    calculation; otherwise it's a generic greeting.
+    """
+    if tool_expr is not None and tool_result is not None:
+        answer = f"The result of {tool_expr} is {tool_result}."
     else:
-        # Generic streaming reply
-        response = (
+        answer = (
             "I am your AI assistant. I can hold a multi-turn conversation, "
             "stream responses token by token, and call a calculator tool "
-            "when you ask me a maths question. Try asking something like: "
+            "when you ask a maths question. Try asking something like: "
             "'What is 45 * 3 + 17?'"
         )
-        for word in response.split():
-            yield ("text", word + " ")
-            time.sleep(0.04)
+    for word in answer.split():
+        yield word + " "
+        time.sleep(0.04)
+
+
+def stream_print(chunks) -> str:
+    """
+    The streaming print helper. Prints each chunk immediately (flush=True,
+    Section 2.2) so text appears word-by-word, and returns the full
+    concatenated text once the stream ends.
+    """
+    full_text = ""
+    for chunk in chunks:
+        print(chunk, end="", flush=True)
+        full_text += chunk
+    print()
+    return full_text.strip()
+
+
+def mock_chat(history: list, system: str) -> str:
+    """
+    Deterministic mock -- no API key needed. Implements the same three
+    moves as a real tool-calling round trip:
+      1. Check whether a tool call is needed.
+      2. If so, run the tool and print the call + result.
+      3. Stream the final answer.
+    Returns the full assistant text so it can be appended to history.
+    """
+    tool_expr = mock_check_for_tool_call(history)
+    tool_result = None
+
+    if tool_expr:
+        print(f"\n[Tool call: {TOOL_NAME}({tool_expr!r})]", flush=True)
+        tool_result = safe_calculate(tool_expr)
+        print(f"[Tool result: {tool_result}]", flush=True)
+
+    print("\nAssistant: ", end="", flush=True)
+    full_text = stream_print(
+        mock_stream_answer(history, system, tool_expr=tool_expr, tool_result=tool_result)
+    )
+    return full_text
 
 
 # ---------------------------------------------------------------------------
-# Anthropic implementation
+# Anthropic implementation (given -- run this with a real ANTHROPIC_API_KEY)
 # ---------------------------------------------------------------------------
 
 
@@ -210,8 +253,6 @@ def anthropic_chat(client, history: list, system: str):
     send the result back. Streams the final answer to stdout.
     Returns the final assistant text so it can be appended to history.
     """
-    import anthropic as _anthropic
-
     # First request
     response = client.messages.create(
         model="claude-haiku-4-5",
@@ -279,7 +320,7 @@ def anthropic_chat(client, history: list, system: str):
 
 
 # ---------------------------------------------------------------------------
-# OpenAI implementation
+# OpenAI implementation (given -- run this with a real OPENAI_API_KEY)
 # ---------------------------------------------------------------------------
 
 
@@ -295,7 +336,7 @@ def openai_chat(client, history: list, system: str):
     # Two-phase approach: non-streaming first pass to detect tool calls cleanly,
     # then a second streaming request for the final answer once the tool result is known.
     response = client.chat.completions.create(
-        model="gpt-5-mini",
+        model="gpt-5.4-mini",
         max_tokens=1024,
         tools=OPENAI_TOOLS,
         messages=messages,
@@ -325,7 +366,7 @@ def openai_chat(client, history: list, system: str):
         print("\nAssistant: ", end="", flush=True)
         full_text = ""
         stream = client.chat.completions.create(
-            model="gpt-5-mini",
+            model="gpt-5.4-mini",
             max_tokens=512,
             messages=messages,
             stream=True,
@@ -344,7 +385,7 @@ def openai_chat(client, history: list, system: str):
         print("\nAssistant: ", end="", flush=True)
         full_text = ""
         stream = client.chat.completions.create(
-            model="gpt-5-mini",
+            model="gpt-5.4-mini",
             max_tokens=1024,
             messages=messages,
             stream=True,
@@ -356,34 +397,6 @@ def openai_chat(client, history: list, system: str):
                 full_text += delta
         print()
         return full_text
-
-
-# ---------------------------------------------------------------------------
-# Mock implementation
-# ---------------------------------------------------------------------------
-
-
-def mock_chat(history: list, system: str):
-    """
-    Deterministic mock: no API key needed. Simulates streaming and tool calls.
-    Returns the final assistant text.
-    """
-    print("\nAssistant: ", end="", flush=True)
-    full_text = ""
-
-    for event_type, data in mock_stream_and_call_tool(history, system):
-        if event_type == "tool_call":
-            expr = data
-            print(f"\n[Tool call: {TOOL_NAME}({expr!r})]", flush=True)
-            result = safe_calculate(expr)
-            print(f"[Tool result: {result}]", flush=True)
-            print("\nAssistant: ", end="", flush=True)
-        elif event_type == "text":
-            print(data, end="", flush=True)
-            full_text += data
-
-    print()  # newline after stream
-    return full_text.strip()
 
 
 # ---------------------------------------------------------------------------
@@ -429,7 +442,7 @@ def main():
     if effective_provider == "anthropic":
         print("  Model: claude-haiku-4-5")
     elif effective_provider == "openai":
-        print("  Model: gpt-5-mini")
+        print("  Model: gpt-5.4-mini")
     print(f"  Tool available: {TOOL_NAME}")
     print("  Type 'quit' or 'exit' to end the session.")
     print("=" * 60)

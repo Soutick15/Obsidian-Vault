@@ -11,7 +11,7 @@ DATABASE: compliance_dev (Azure PostgreSQL, SHARED with core/ai)
 ================================================================================
 
 PURPOSE:
-Dedicated identity provider and authentication microservice for the NyAi platform.
+Dedicated identity provider and authentication microservice for the ComplianceManagementSystem platform.
 Handles user login, registration, token issuance, refresh token management,
 and user CRUD operations.
 
@@ -35,37 +35,37 @@ needing to manage password hashing or token generation.
 ## 2. PACKAGE ANALYSIS
 ================================================================================
 
-### Package: com.nyai.config
+### Package: com.ComplianceManagementSystem.config
 - AppConfig.java — General configuration properties.
 
-### Package: com.nyai.controller
+### Package: com.ComplianceManagementSystem.controller
 - auth/AuthController.java — Handles login, logout, refresh, register, and /me endpoints.
 - UserResource.java — CRUD operations for users and department assignments.
 
-### Package: com.nyai.dto
+### Package: com.ComplianceManagementSystem.dto
 - auth/LoginRequest, RegisterRequest, RefreshTokenRequest, TokenResponse, CurrentUserResponse
 - UserDto, UserCreateRequest, UserUpdateRequest
 
-### Package: com.nyai.entity
+### Package: com.ComplianceManagementSystem.entity
 - RefreshToken.java — Tracks long-lived refresh tokens with revocation support.
 - User.java — Core identity entity.
 - Role.java, UserRole.java — RBAC role definitions.
 - Tenant.java, BusinessEntity.java, Department.java, Task.java — Shared entity definitions (duplicated or shared JPA mappings for the shared database).
 
-### Package: com.nyai.repository
+### Package: com.ComplianceManagementSystem.repository
 - RefreshTokenRepository.java
 - UserRepository.java
 - RoleRepository.java
 - TenantRepository.java, BusinessEntityRepository.java, DepartmentRepository.java
 
-### Package: com.nyai.security
+### Package: com.ComplianceManagementSystem.security
 - JwtService.java — JWT generation (RSA Private Key) and validation.
 - CookieAuthRequestFilter.java — Request interceptor for token extraction.
 - PasswordService.java — BCrypt hashing wrapper.
 - RolePermissionConfig.java — Role matrix (slightly different from core, focuses on core/evidence paths).
 - PermissionFilter.java, SecurityUtils.java, AuthenticatedUser.java
 
-### Package: com.nyai.service
+### Package: com.ComplianceManagementSystem.service
 - AuthService.java & impl/AuthServiceImpl.java — Core authentication logic.
 - UserService.java — User management logic.
 
@@ -194,7 +194,7 @@ BUSINESS MEANING: Enables stateful session revocation despite stateless JWTs. By
 FILE: application-dev.properties
 KEY CONFIGURATIONS:
   quarkus.http.port=8085
-  quarkus.datasource.jdbc.url=jdbc:postgresql://nyai-metadata-db-dev.postgres.database.azure.com:5432/compliance_dev
+  quarkus.datasource.jdbc.url=jdbc:postgresql://ComplianceManagementSystem-metadata-db-dev.postgres.database.azure.com:5432/compliance_dev
   quarkus.hibernate-orm.database.generation=none (schema managed externally)
   smallrye.jwt.sign.key.location=keys/privateKey.pem
   mp.jwt.verify.publickey.location=keys/publicKey.pem

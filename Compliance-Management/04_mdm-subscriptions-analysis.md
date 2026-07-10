@@ -58,14 +58,14 @@ legislation to their subscription, triggering a Snapshot.
 ## 3. PACKAGE & COMPONENT ANALYSIS
 ================================================================================
 
-### Workers (com.nyai.mdm.subscription.worker)
+### Workers (com.ComplianceManagementSystem.mdm.subscription.worker)
 - `SnapshotWorker` (@Scheduled every 1m): Picks up pending SnapshotJobs and generates chunks.
 - `ChangeJobWorker` (@Scheduled every 5m): Evaluates subscriptions against new `change_logs`.
 - `ActAutoAssignmentWorker` (@Scheduled every 5m): Checks if subscriptions have the flag
   `evaluation_pending = true`. Runs the discovery engine and updates the `tenant_act_assignments`.
 - `SubscriptionReconcilerWorker`: Reconciles entity-level subscriptions.
 
-### Controllers (com.nyai.mdm.subscription.controller)
+### Controllers (com.ComplianceManagementSystem.mdm.subscription.controller)
 Evidence: controller/SubscriptionController.java
 - `GET /subscription/jobs?type=SNAPSHOT|CHANGE` — Ask MDM for pending sync jobs.
 - `GET /subscription/jobs/{jobId}/chunks/{chunkNumber}` — Download the chunk payload.
@@ -74,7 +74,7 @@ Evidence: controller/SubscriptionController.java
 - `POST /subscription/imported-acts/sync` — Normalize and map Excel uploads from tenants
    into formal MDM Act subscriptions.
 
-### Services (com.nyai.mdm.subscription.serviceimpl)
+### Services (com.ComplianceManagementSystem.mdm.subscription.serviceimpl)
 - `ChangeJobServiceImpl.java`: Handles cursor math, queries `changeLogRepository`,
   slices data into chunks of size 20, applies MD5 hashing, saves to `ChangeChunk`.
 - `SnapshotJobManager.java`: Extracts job state transitions using `REQUIRES_NEW`

@@ -4,7 +4,7 @@
 >[!question] What were your achievements in the review period? How did you achieve them?
 
 
-Project 1 - DYP : Form Builder
+Project 1 - Healthcare System : Form Builder
 - Implemented 2 out of 5 planned backend features for the Form Builder module:  : 
 	1. "Refer-From API": User can reuse previously entered values of a normal fields, table, and multi-entry section.
 	2. "Display Condition API" :  It dynamically enables field visibility based on configuration.
@@ -13,7 +13,7 @@ Project 1 - DYP : Form Builder
 - Wrote unit test cases for business-critical components to improve code quality and reliability.
 
 
-Project 2 - NyAI : Compliance Management Platform
+Project 2 - Compliance Management Platform
 - Worked across across multiple microservices including mdm-core, compliance-core, authentication, and RBAC. Below I have mentioned the Key contributions:
 - Developed the Compliance Entity–Department Mapping feature.
 - Built automated tenant provisioning using MDM JSON configuration.
@@ -23,10 +23,10 @@ Project 2 - NyAI : Compliance Management Platform
 - Collaborated closely with QA and frontend teams to ensure smooth feature delivery and timely production fixes.
 
 
-Project 3 – DYP : FL
+Project 3 – Healthcare System : FL
 - Resolved 10 + production bugs which were related to core business workflows. 
 
-Project 4 – DYP : Data Dictionary
+Project 4 – Healthcare System : Data Dictionary
 - Supported the Data Team in maintaining the Form Data Dictionary by documenting form sections, groups, field properties, selectable values, and field types.
 
 ---
@@ -34,7 +34,7 @@ Project 4 – DYP : Data Dictionary
 >[!question] Mention the skills you have learnt during your review period to do your Job better
 >
 
-- While working in DYP and NyAI. I gained hands-on experience with
+- While working in Healthcare and ComplianceManagementSystem,  I gained hands-on experience with
 	1. Quarkus & SpringBoot
 	2. FalkorDB
 	3. Microservices
@@ -67,7 +67,7 @@ I focused on understanding the business requirements before implementing any cha
 
 - While working on features of Form-builder, I analyzed different approaches and performed POCs with frontend team & UI-UX team to discuss what works best for both the user while taking care of functionality and application performance. 
 
-- While working in NyAI, I worked closely with senior team members to understand the business requirements and implemented the required changes accordingly.  
+- While working in ComplianceManagementSystem, I worked closely with senior team members to understand the business requirements and implemented the required changes accordingly.  
   
 - I coordinated with the QA team to understand the reported bugs and fixed them within the expected timeline. Whenever there were backend API changes, I worked with the frontend team to make sure the integration was smooth and there were no compatibility issues.  
   

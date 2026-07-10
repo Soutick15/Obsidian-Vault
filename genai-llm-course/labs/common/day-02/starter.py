@@ -1,13 +1,16 @@
 """
-Day 2 Lab — Attention from Scratch (STARTER)
-=============================================
-Goal: implement scaled dot-product attention step by step using NumPy.
+Day 2 Lab -- Attention from Scratch (STARTER)
 
-Instructions:
-  - Find every comment that starts with  # TODO  and fill in the code.
-  - Run with:  python labs/common/day-02/starter.py
-  - Compare your output against labs/common/day-02/README.md (Expected Output section).
-  - If you get stuck, check solution.py — but try first!
+Implement scaled dot-product attention. Four lines are left for you
+(TODO 1-4) inside scaled_dot_product_attention(); the softmax helper and everything else are
+already written. Follow Day 2, Section 3 (Worked Example) -- you did these
+exact steps by hand and in code there.
+
+Run with:
+    python starter.py     # numpy only, no API key needed
+
+Running before the TODOs are filled will error at the first unfilled line --
+that is expected. Fill TODO 1-4 and rerun.
 """
 
 import numpy as np
@@ -17,105 +20,150 @@ np.random.seed(42)
 
 # ─── toy setup ────────────────────────────────────────────────────────────────
 TOKENS = ["The", "cat", "sat", "quietly"]
-n = len(TOKENS)   # sequence length: 4
+n = len(TOKENS)   # sequence length
 d_model = 8       # embedding dimension
-d_k = 4           # key/query projection dimension
-d_v = 4           # value projection dimension
+d_k = 4           # key/query dimension
+d_v = 4           # value dimension
 
-# Simulate token embeddings (in a real model these come from an embedding table)
-X = np.random.randn(n, d_model)  # shape: (4, 8)
+# Simulated token embeddings  shape: (n, d_model)
+X = np.random.randn(n, d_model)
 
-# Learned projection weight matrices (in a real model these are trained)
-W_Q = np.random.randn(d_model, d_k)   # (8, 4)
-W_K = np.random.randn(d_model, d_k)   # (8, 4)
-W_V = np.random.randn(d_model, d_v)   # (8, 4)
+# Simulated learned projection matrices
+W_Q = np.random.randn(d_model, d_k)
+W_K = np.random.randn(d_model, d_k)
+W_V = np.random.randn(d_model, d_v)
 
 print("=== Day 2: Scaled Dot-Product Attention from Scratch ===\n")
 print(f"Tokens : {TOKENS}")
 print(f"d_model: {d_model}   |  d_k: {d_k}   |  d_v: {d_v}\n")
 
 
-# ─── STEP 1: Compute Q, K, V projections ─────────────────────────────────────
-# TODO: project X through W_Q, W_K, W_V to get Q, K, V
-#       shapes should be (n, d_k), (n, d_k), (n, d_v) respectively
-Q = None  # TODO
-K = None  # TODO
-V = None  # TODO
+# ─── helper ───────────────────────────────────────────────────────────────────
+
+def softmax(x: np.ndarray, axis: int = -1) -> np.ndarray:
+    """Numerically stable softmax."""
+    x_shifted = x - x.max(axis=axis, keepdims=True)  # stability: subtract max
+    exp_x = np.exp(x_shifted)
+    return exp_x / exp_x.sum(axis=axis, keepdims=True)
 
 
-# ─── STEP 2: Raw attention scores ────────────────────────────────────────────
-# TODO: compute scores = Q · Kᵀ
-#       shape should be (n, n)
-#       scores[i][j] = "how much does token i want to attend to token j?"
-scores = None  # TODO
+def scaled_dot_product_attention(
+    Q: np.ndarray,
+    K: np.ndarray,
+    V: np.ndarray,
+    mask: np.ndarray | None = None,
+) -> tuple[np.ndarray, np.ndarray]:
+    """
+    Scaled dot-product attention.
 
-print("--- Raw attention scores (Q · Kᵀ) ---")
-print(f"shape: {scores.shape}")
-print(np.round(scores, 3), "\n")
+    Args:
+        Q: Query matrix  (seq_len, d_k)
+        K: Key matrix    (seq_len, d_k)
+        V: Value matrix  (seq_len, d_v)
+        mask: Boolean mask (seq_len, seq_len).  True = keep, False = mask out.
+
+    Returns:
+        output:  (seq_len, d_v) — context-aware token representations
+        weights: (seq_len, seq_len) — attention weight matrix
+    """
+    d_k = Q.shape[-1]
+
+    # Step 1: raw scores — how relevant is each key to each query?
+    scores = None  # TODO 1 -- compare every word with every other:  scores = Q @ K.T   (shape n x n)
+
+    # Step 2: scale to keep variance ~1 regardless of d_k
+    scores = None  # TODO 2 -- scale:  scores = scores / np.sqrt(d_k)
+
+    # Step 3: optional causal mask (decoder mode)
+    if mask is not None:
+        scores = np.where(mask, scores, -1e9)
+
+    # Step 4: softmax → attention weights (each row sums to 1)
+    weights = None  # TODO 3 -- to weights:  weights = softmax(scores, axis=-1)
+
+    # Step 5: weighted blend of value vectors
+    output = None  # TODO 4 -- blend the values:  output = weights @ V   (shape n x d_v)
+
+    return output, weights
 
 
-# ─── STEP 3: Scale ────────────────────────────────────────────────────────────
-# TODO: divide scores by sqrt(d_k) to keep gradients healthy
-scores_scaled = None  # TODO
+def print_weight_matrix(
+    weights: np.ndarray,
+    tokens: list[str],
+    title: str,
+) -> None:
+    """Pretty-print an (n, n) attention weight matrix with token labels."""
+    print(f"--- {title} ---")
+    print(f"shape: {weights.shape}")
+    col_width = max(len(t) for t in tokens) + 2
+    header = " " * (col_width + 2) + "  ".join(f"{t:>{col_width}}" for t in tokens)
+    print(header)
+    for i, token in enumerate(tokens):
+        row = "  ".join(f"{weights[i, j]:{col_width}.4f}" for j in range(len(tokens)))
+        print(f"{token:<{col_width}} [ {row} ]")
+    # Verify rows sum to 1
+    row_sums = weights.sum(axis=-1)
+    assert np.allclose(row_sums, 1.0), f"Row sums not 1: {row_sums}"
+    print(f"(row sums: all ≈ 1.0 ✓)\n")
 
 
-# ─── STEP 4: Softmax → attention weights ──────────────────────────────────────
-def softmax(x, axis=-1):
-    """Numerically stable softmax along the given axis."""
-    # TODO: implement softmax
-    # Hint: subtract the max along `axis` first for numerical stability,
-    #       then exponentiate, then divide by the sum.
-    pass  # TODO
+# ─── PART 1: Bidirectional attention (encoder style) ─────────────────────────
 
+# Project embeddings into Q, K, V
+Q = X @ W_Q   # (4, 4)
+K = X @ W_K   # (4, 4)
+V = X @ W_V   # (4, 4)
 
-weights = softmax(scores_scaled, axis=-1)  # shape: (n, n)
+# Compute attention (no mask — every token sees every other)
+output_bi, weights_bi = scaled_dot_product_attention(Q, K, V)
 
-print("--- Attention weights after softmax (each row sums to 1) ---")
-print(f"shape: {weights.shape}")
-# Pretty-print with token labels
-header = "         " + "  ".join(f"{t:>7}" for t in TOKENS)
-print(header)
-for i, token in enumerate(TOKENS):
-    row = "  ".join(f"{weights[i, j]:7.4f}" for j in range(n))
-    print(f"{token:<8} [ {row} ]")
+print_weight_matrix(weights_bi, TOKENS, "Bidirectional attention weights (encoder style)")
+
+print("--- Context-aware output vectors (bidirectional) ---")
+print(f"shape: {output_bi.shape}")
+print(np.round(output_bi, 4))
 print()
 
-# Sanity check: each row should sum to 1.0
-assert np.allclose(weights.sum(axis=-1), 1.0), "Rows must sum to 1!"
+# What this shows: each row tells you how token i distributed attention across
+# all tokens.  High values = "token i paid a lot of attention to that column token."
 
 
-# ─── STEP 5: Weighted sum of values ──────────────────────────────────────────
-# TODO: compute output = weights · V
-#       shape should be (n, d_v)
-output = None  # TODO
+# ─── PART 2: Causal masked attention (decoder style) ─────────────────────────
 
-print("--- Context-aware output vectors ---")
-print(f"shape: {output.shape}")
-print(np.round(output, 3), "\n")
+# Lower-triangular mask: position i can only see positions j <= i
+causal_mask = np.tril(np.ones((n, n), dtype=bool))
+# causal_mask[i][j] = True  iff j <= i  (allowed to attend)
 
+output_causal, weights_causal = scaled_dot_product_attention(Q, K, V, mask=causal_mask)
 
-# ─── BONUS STEP: Causal (decoder) mask ───────────────────────────────────────
 print("=== Causal (decoder-style) masked attention ===")
+print_weight_matrix(weights_causal, TOKENS, "Causal attention weights (future tokens blocked)")
 
-# TODO: create a causal mask — a boolean matrix where mask[i][j] = True
-#       means position j is ALLOWED for position i to attend to.
-#       In other words: only the lower triangle (including diagonal) is True.
-# Hint: look up np.tril or np.triu
+print("--- Context-aware output vectors (causal) ---")
+print(f"shape: {output_causal.shape}")
+print(np.round(output_causal, 4))
+print()
 
-mask = None  # TODO  shape: (n, n), dtype bool
+# What this shows:
+#   - "The" (row 0) can only attend to itself → weight[0][0] = 1.0
+#   - "cat" (row 1) attends to "The" and "cat"
+#   - "quietly" (row 3) attends to all four tokens
+# This is exactly how GPT/Claude-style models generate text left-to-right.
 
-# TODO: apply the mask — set scores_scaled to -1e9 (approx. -inf) where mask is False
-scores_masked = scores_scaled.copy()
-# TODO: scores_masked[...] = -1e9  (fill in the condition)
 
-weights_causal = softmax(scores_masked, axis=-1)
+# ─── PART 3: Interpretation ──────────────────────────────────────────────────
 
-print("--- Masked attention weights (future tokens zeroed) ---")
-header = "         " + "  ".join(f"{t:>7}" for t in TOKENS)
-print(header)
+print("=== Interpretation ===")
+print("For each token (row), which other token does it attend to most?\n")
 for i, token in enumerate(TOKENS):
-    row = "  ".join(f"{weights_causal[i, j]:7.4f}" for j in range(n))
-    print(f"{token:<8} [ {row} ]")
+    top_j = int(np.argmax(weights_bi[i]))
+    print(
+        f"  {token!r:10} attends most to {TOKENS[top_j]!r:10} "
+        f"(weight: {weights_bi[i, top_j]:.4f})"
+    )
 
-print("\nDone! Compare your output with the expected output in README.md.")
-print("Then open solution.py to check your implementation.")
+print()
+print("Note: weights are determined by LEARNED W_Q / W_K matrices.")
+print("In this demo they are random — in a real model they encode grammar, semantics, etc.")
+print()
+print("=== Lab complete. See curriculum/common/Day-02-transformers-attention.md for theory. ===")

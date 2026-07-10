@@ -10,7 +10,7 @@ FRAMEWORK: Quarkus 3.30.6
 ================================================================================
 
 PURPOSE:
-The AI brain of the NyAi compliance ecosystem. It offloads expensive or complex
+The AI brain of the ComplianceManagementSystem compliance ecosystem. It offloads expensive or complex
 Large Language Model (LLM) operations and semantic evaluations from `compliance-core`.
 It relies on the shared `compliance_dev` database to read entity configurations,
 tasks, and tenant settings.

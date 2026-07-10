@@ -1,12 +1,12 @@
 ================================================================================
 00_REPOSITORY_INVENTORY.txt
-NyAi Platform — Full Repository Forensic Inventory
+ComplianceManagementSystem Platform — Full Repository Forensic Inventory
 Generated from source code analysis — NOT assumptions
 ================================================================================
 
 ## 1. REPOSITORY STRUCTURE
 
-Root: /NyAi/
+Root: /ComplianceManagementSystem/
 ├── compliance-core/           # Main tenant-facing compliance engine (port 8080)
 ├── compliance-auth/           # Authentication & authorization service (port 8085)
 ├── compliance-ai/             # AI/LLM intelligence engine (port 8086)
@@ -14,7 +14,7 @@ Root: /NyAi/
 ├── mdm-core/                  # Master Data Management — global legal data repository
 ├── mdm-subscriptions/         # MDM tenant subscription & snapshot delivery
 ├── mdm-initial-data/          # Schema migration runner for MDM DB
-├── NyAi_Architecture_Overview.txt
+├── ComplianceManagementSystem_Architecture_Overview.txt
 └── MDM_SUBSCRIPTION_CONTEXT.md
 
 Total Services: 7 (5 runtime + 2 schema-only)
@@ -40,7 +40,7 @@ Evidence:
   - compliance-auth port: application-dev.properties line 6: quarkus.http.port=8085
   - compliance-ai port: application-dev.properties line 6: quarkus.http.port=8086
   - All services: pom.xml → quarkus.platform.version = 3.30.6
-  - Database URL: jdbc:postgresql://nyai-metadata-db-dev.postgres.database.azure.com:5432/compliance_dev
+  - Database URL: jdbc:postgresql://ComplianceManagementSystem-metadata-db-dev.postgres.database.azure.com:5432/compliance_dev
 
 ================================================================================
 ## 3. FRAMEWORK & TECHNOLOGY STACK
@@ -54,7 +54,7 @@ Evidence:
   Evidence: application-dev.properties: quarkus.native.builder-image=quay.io/quarkus/ubi-quarkus-mandrel-builder-image:jdk-21
 
 ### Persistence
-- PostgreSQL 18 (Azure-hosted: nyai-metadata-db-dev.postgres.database.azure.com)
+- PostgreSQL 18 (Azure-hosted: ComplianceManagementSystem-metadata-db-dev.postgres.database.azure.com)
 - Hibernate ORM with Panache (quarkus-hibernate-orm-panache)
 - Flyway (quarkus-flyway) — disabled in core services, run by *-initial-data
 - JSONB columns heavily used (SqlTypes.JSON, JdbcTypeCode)
@@ -103,7 +103,7 @@ Evidence:
 ## 4. INFRASTRUCTURE DEPENDENCIES
 ================================================================================
 
-1. Azure PostgreSQL (nyai-metadata-db-dev.postgres.database.azure.com)
+1. Azure PostgreSQL (ComplianceManagementSystem-metadata-db-dev.postgres.database.azure.com)
    - Database: compliance_dev (shared by compliance-core, compliance-auth, compliance-ai)
    - Database: mdm_dev (shared by mdm-core, mdm-subscriptions)
 
@@ -116,8 +116,8 @@ Evidence:
    - Used for: evidence ranking, gap analysis, applicability evaluation
 
 4. MDM Portal (external)
-   - URL: https://mdm.dev.nyai.ai/mdm-core (OAuth service)
-   - URL: https://mdm.dev.nyai.ai/mdm-subscriptions (subscription service)
+   - URL: https://mdm.dev.ComplianceManagementSystem.ai/mdm-core (OAuth service)
+   - URL: https://mdm.dev.ComplianceManagementSystem.ai/mdm-subscriptions (subscription service)
    Evidence: compliance-core application-dev.properties lines 64-69
 
 ================================================================================

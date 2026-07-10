@@ -4,19 +4,20 @@
 
 By the end of Day 4 you will be able to:
 
-1. Describe the anatomy of a prompt (system / user / assistant roles) and explain how the message format works across Claude and OpenAI-compatible APIs.
-2. Apply core prompting techniques — zero-shot, few-shot (in-context learning), chain-of-thought, role/persona prompting, delimiters, and output-format control — and know when each helps or hurts.
-3. Produce structured output (valid JSON) reliably using prompt constraints and safe parsing.
-4. Recognise and mitigate common failure modes: ambiguity, prompt injection, hallucination, and excessive verbosity.
-5. Organise prompts as reusable, versioned templates in a Python project.
+1. Explain what a prompt is and how the `system` / `user` / `assistant` roles work in a chat-completion API.
+2. Write zero-shot and few-shot prompts, and know when to reach for each.
+3. Trigger step-by-step reasoning with chain-of-thought prompting.
+4. Write prompts that are specific about format, and get clean JSON back — parsed safely, without crashing on bad output.
+5. Recognise and mitigate common failure modes: ambiguity, prompt injection, hallucination, and excessive verbosity.
+6. Organise prompts as reusable functions in a small Python module.
 
 ---
 
 ## 2. Concept Reading
 
-### 2.1 Anatomy of a Prompt
+### 2.1 What Is a Prompt?
 
-Modern LLM APIs are **chat-completion APIs**. Instead of sending a single prompt string, you send a **list of messages**. Each message contains two fields:
+A prompt is just the text you send to a model, asking it to do something. Modern LLM APIs are **chat-completion APIs**: instead of sending one blob of text, you send a list of **messages**, each with a `role` and `content`. The model reads the whole list and generates the next message.
 
 - `role` → Who is sending the message?  
 - `content` → The actual message text.
@@ -843,33 +844,30 @@ I start by defining the label set and collecting 20–50 example inputs across a
 
 Show answer
 
-In-context learning (ICL) is the model's ability to adapt its behaviour purely from examples given in the prompt — no weight updates. It is fast (zero training time), reversible, and costs only tokens. Fine-tuning updates the model's weights on a curated dataset, producing a persistent specialisation. ICL is usually the right starting point: it's cheaper, faster to iterate, and often achieves 80–90% of the accuracy of fine-tuning for classification and extraction tasks. Fine-tuning makes sense when: the token cost of long few-shot prompts at scale is prohibitive; you need knowledge the base model genuinely doesn't have; or you need very consistent stylistic output across thousands of diverse inputs. In practice I prototype with ICL and only move to fine-tuning when there's a clear bottleneck.
+In-context learning is what happens when a model changes its behaviour based purely on examples given inside the prompt — no retraining, no weight changes. It's how few-shot prompting works: the examples exist only for the duration of that one request, and the effect is instant and fully reversible — remove the examples from the next prompt, and the "learned" behaviour is gone. This is very different from actually training or fine-tuning a model, which produces a lasting change and requires a labelled dataset and a training run.
 
 
 
 ---
 
-## 6. Further Reading
+## 7. Further Reading
 
 | Resource | Why it matters |
 |----------|---------------|
-| [Anthropic Prompt Engineering Guide](https://docs.anthropic.com/en/docs/build-with-claude/prompt-engineering/overview) | Official Claude-specific prompting patterns and examples |
-| [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering) | Canonical six strategies; works for any model |
-| [Chain-of-Thought Prompting Elicits Reasoning in LLMs — Wei et al. 2022](https://arxiv.org/abs/2201.11903) | Original CoT paper; short and readable |
-| [Large Language Models are Zero-Shot Reasoners — Kojima et al. 2022](https://arxiv.org/abs/2205.11916) | Zero-shot CoT ("Let's think step by step") paper |
-| [OWASP Top 10 for LLM Applications](https://owasp.org/www-project-top-10-for-large-language-model-applications/) | Security risks including prompt injection (LLM01) |
-| [Prompt Injection Attacks Against GPT-3 — Riley et al. 2022](https://arxiv.org/abs/2302.12173) | Academic grounding for prompt injection risk |
-| [Structured Outputs — OpenAI Docs](https://platform.openai.com/docs/guides/structured-outputs) | JSON mode and function-calling for reliable output |
-| [Learn Prompting (free online guide)](https://learnprompting.org/) | Broad community guide covering 40+ techniques |
+| [Anthropic Prompt Engineering Guide](https://platform.claude.com/docs/en/build-with-claude/prompt-engineering/overview) | Official Claude-specific prompting patterns, written for newcomers |
+| [OpenAI Prompt Engineering Guide](https://platform.openai.com/docs/guides/prompt-engineering) | The canonical six strategies; applies to any model, not just OpenAI's |
+| [Learn Prompting](https://learnprompting.org/) | Free, structured, beginner-friendly course covering prompting from first principles |
+| [Prompt Engineering Guide (promptingguide.ai)](https://www.promptingguide.ai/) | Visual, example-heavy reference — good for looking up a technique by name |
+| [Structured Outputs — OpenAI Docs](https://platform.openai.com/docs/guides/structured-outputs) | How to get guaranteed-valid JSON back from a model, without hand-rolled parsing |
 
 ---
 
-## 7. Key Takeaways
+## 8. Key Takeaways
 
-- **Message format:** LLM APIs use a `messages` list of `{role, content}` dicts. `system` sets persistent context; `user` is the current turn. Claude and OpenAI differ in where `system` lives — the concept is the same.
-- **Zero-shot vs few-shot:** Zero-shot for simple tasks; add 3–6 labelled examples (few-shot) when output format or labels need to be tightly controlled.
-- **Chain-of-thought:** Append "Let's think step by step" or add a worked example to trigger reasoning. Use for multi-step logic; skip for simple lookups.
-- **Structured output:** Layer prompt instruction + API param + defensive parser. Never assume JSON arrives clean.
-- **Prompt injection is real:** Wrap user data in delimiters; add a defensive system instruction; never inject raw user input into the instruction portion.
-- **Iterate systematically:** Change one variable at a time; evaluate on a fixed representative set; measure, don't guess.
-- **Version your prompts:** Treat them as code — name them, track them in version control, log which version produced each output.
+- **A prompt is a list of role-tagged messages.** `system` sets lasting behaviour; `user` is the current turn's input.
+- **Zero-shot for simple tasks; few-shot when the format or labels are unusual** — 3-6 well-chosen examples in an `Input → Output` shape.
+- **"Let's think step by step" triggers reasoning** for multi-step problems; skip it for simple lookups or when you need a short answer.
+- **Be specific: state format, length, and what to exclude.** Wrap external data in delimiters — it also blocks prompt injection.
+- **Getting clean JSON needs layers:** a clear format instruction, a structured-output API feature if available, and a parser that never crashes on a bad reply.
+- **Failure modes have direct fixes:** ambiguity → be specific; injection → delimiters + defensive instructions; hallucination → ground in provided material; verbosity → cap length explicitly.
+- **Iterate one change at a time,** on the same set of examples, judged against a concrete criterion.

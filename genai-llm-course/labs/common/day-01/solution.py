@@ -25,15 +25,17 @@ def count_tokens(text: str, encoding) -> tuple[int, list[int]]:
 def part_a():
     print("=== Part A: Tokenisation ===")
 
-    # cl100k_base — used by GPT-4 / GPT-4o; use for token-count ESTIMATION only.
-    # Claude uses its own tokenizer (no public tiktoken equivalent).
-    encoding = tiktoken.get_encoding("cl100k_base")
-    print("Encoding: cl100k_base\n")
+    # o200k_base — used by current OpenAI models (GPT-4o and newer); use for
+    # token-count ESTIMATION only. Older models (GPT-3.5-turbo, original GPT-4)
+    # used cl100k_base instead. Claude uses its own tokenizer (no public
+    # tiktoken equivalent).
+    encoding = tiktoken.get_encoding("o200k_base")
+    print("Encoding: o200k_base\n")
 
     sample_texts = [
         "Hello, world!",
         "Tokenisation is surprisingly nuanced.",
-        "GPT-4 uses cl100k_base tokenisation.",
+        "GPT-4o uses o200k_base tokenisation.",
         "日本語のテキスト (Japanese text) costs more tokens per character.",
         "def calculate_embedding_similarity(vec_a, vec_b):",
     ]

@@ -250,7 +250,7 @@ def try_openai_client():
 
         def complete(self, prompt: str, system: str, temperature: float) -> str:
             response = self._client.chat.completions.create(
-                model="gpt-5-mini",
+                model="gpt-5.4-mini",
                 max_tokens=128,
                 temperature=temperature,
                 messages=[
@@ -262,7 +262,7 @@ def try_openai_client():
 
         @property
         def provider_name(self) -> str:
-            return "OpenAI (gpt-5-mini)"
+            return "OpenAI (gpt-5.4-mini)"
 
     return OpenAIClient(api_key)
 
@@ -322,74 +322,19 @@ def run_temperature_comparison() -> None:
 # ---------------------------------------------------------------------------
 
 MODEL_TABLE = [
-    # (Family, Model tier, Capability, Cost tier, Latency, Context, Hosting)
-    (
-        "Claude (Anthropic)",
-        "Small/Fast (Haiku class)",
-        "Good",
-        "$",
-        "Low",
-        "200K",
-        "API only",
-    ),
-    (
-        "Claude (Anthropic)",
-        "Mid (Sonnet class)",
-        "Very Good",
-        "$$",
-        "Medium",
-        "200K",
-        "API only",
-    ),
-    (
-        "Claude (Anthropic)",
-        "Large (Opus class)",
-        "Excellent",
-        "$$$",
-        "High",
-        "200K",
-        "API only",
-    ),
-    ("GPT (OpenAI)", "Small (5-mini)", "Good", "$", "Low", "128K", "API / Azure"),
-    ("GPT (OpenAI)", "Large (4o)", "Excellent", "$$$", "Medium", "128K", "API / Azure"),
-    (
-        "GPT o-series",
-        "Reasoning (o3)",
-        "Top",
-        "$$$$",
-        "Very High",
-        "200K",
-        "API / Azure",
-    ),
-    ("Llama (Meta)", "3B–8B", "Fair", "Free*", "Very Low", "8K-128K", "Self-hosted"),
+    # (Family, Model tier, Capability, Cost, Speed, Context, Hosting)
+    ("Claude (Anthropic)", "Haiku 4.5 (small/fast)", "Good", "$", "Fast", "200K", "API only"),
+    ("Claude (Anthropic)", "Sonnet 5 (mid/default)", "Very Good", "$$", "Medium", "1M", "API only"),
+    ("Claude (Anthropic)", "Opus 4.8 (large)", "Excellent", "$$$", "Slower", "1M", "API only"),
+    ("Claude (Anthropic)", "Fable 5 (most capable)", "Frontier", "$$$$", "Slower", "1M", "API only"),
+    ("GPT (OpenAI)", "GPT-5.4 nano/mini (small)", "Good", "$", "Fast", "1M", "API / Azure"),
+    ("GPT (OpenAI)", "GPT-5.5 (flagship)", "Excellent", "$$$", "Medium", "1M", "API / Azure"),
+    ("GPT o-series", "o3 (reasoning)", "Top", "$$$$", "Slowest", "200K", "API / Azure"),
+    ("Llama (Meta)", "1B-8B", "Fair", "Free*", "Fastest", "8K-128K", "Self-hosted"),
     ("Llama (Meta)", "70B+", "Very Good", "Free*", "Medium", "128K", "Self-hosted"),
-    (
-        "Mistral",
-        "7B / Mixtral 8x7B",
-        "Good",
-        "Free*",
-        "Low",
-        "32K",
-        "Self-hosted / API",
-    ),
-    (
-        "Qwen (Alibaba)",
-        "7B–72B",
-        "Good (CJK)",
-        "Free*",
-        "Medium",
-        "32K-128K",
-        "Self-hosted / API",
-    ),
-    (
-        "Gemma (Google)",
-        "2B–9B",
-        "Fair",
-        "Free*",
-        "Very Low",
-        "8K",
-        "Self-hosted / Edge",
-    ),
+    ("Mistral", "7B / Mixtral 8x7B", "Good", "Free*", "Fast", "32K", "Self-hosted / API"),
+    ("Qwen (Alibaba)", "7B-72B", "Good (CJK)", "Free*", "Medium", "32K-128K", "Self-hosted / API"),
+    ("Gemma (Google)", "2B-9B", "Fair", "Free*", "Fastest", "8K", "Self-hosted / Edge"),
 ]
 
 
@@ -399,8 +344,8 @@ def run_model_selection_table() -> None:
     print("=" * 60)
     print("  * 'Free' = infrastructure cost only (GPU/CPU); no per-token fee\n")
 
-    col_widths = [20, 22, 11, 6, 10, 10, 22]
-    headers = ["Family", "Tier", "Capability", "Cost", "Latency", "Context", "Hosting"]
+    col_widths = [20, 26, 11, 6, 8, 10, 20]
+    headers = ["Family", "Tier", "Capability", "Cost", "Speed", "Context", "Hosting"]
 
     def row_str(cells):
         return "  " + "  ".join(str(c).ljust(w) for c, w in zip(cells, col_widths))
@@ -414,13 +359,16 @@ def run_model_selection_table() -> None:
 
     print(separator)
     print("\n  DECISION HEURISTICS:")
-    print("  • Prototype / iterate fast  →  Small/Fast hosted (Haiku / 4o-mini)")
-    print("  • Hard reasoning / code     →  Sonnet / Opus / GPT-4o / o3")
-    print("  • Data residency required   →  Self-hosted Llama 70B or Mistral")
+    print("  • Prototype / iterate fast  →  Small/Fast hosted (Haiku 4.5 / GPT-5.4 mini)")
+    print("  • Hard reasoning / code     →  Sonnet 5 / Opus 4.8 / Fable 5 / GPT-5.5 / o3")
+    print("  • Data residency required   →  Self-hosted Llama 70B+ or Mistral")
     print("  • Multilingual (CJK)        →  Benchmark Qwen alongside Claude/GPT")
     print("  • Edge / mobile             →  Llama 3.2 1B-3B or Gemma 2B")
     print(
         "  • Always benchmark on YOUR task — leaderboard ranks don't always generalise."
+    )
+    print(
+        "  • Model names/prices shift every few months — re-check the provider's docs."
     )
 
 

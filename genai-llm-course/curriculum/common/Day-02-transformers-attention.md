@@ -8,16 +8,18 @@
 
 By the end of Day 2 you will be able to:
 
-1. Trace the data flow through a transformer block — from token IDs to output logits — and explain what each sub-layer does.
-2. Explain the Query/Key/Value formulation of self-attention and articulate the intuition (not just the formula) behind why it captures context.
-3. Distinguish multi-head attention from single-head attention and state why multiple heads help.
-4. Compare decoder-only, encoder-only, and encoder-decoder architectures and choose the right one for a given task.
-5. Explain the O(n²) cost of attention, why it limits context windows, and name at least two approaches used to extend them.
+1. Explain, in your own words, how a transformer turns a sentence into a prediction of the next word.
+2. Explain what "attention" means in an AI model using an everyday analogy, and describe the ideas behind Query, Key, and Value in plain language.
+3. Explain why models use "multiple heads" of attention instead of just one.
+4. Explain why models need a way to track word order ("positional encoding"), in plain language.
+5. Describe the three ways a transformer can be wired — encoder-only, decoder-only, encoder-decoder — and give a real example of each.
+6. Explain, without using math, why context windows (how much text a model can "see" at once) are limited, and give a current example figure.
 
 ---
+
 ## 2. Concept Reading
 
-### 2.1 The Big Picture — From Tokens to Logits
+### 2.1 The Big Picture — From Words to a Prediction
 
 Almost every modern LLM (GPT, Llama, Gemini, Claude, Mistral, DeepSeek) is based on the **Transformer Architecture** introduced in the 2017 paper:
 
@@ -63,10 +65,11 @@ The model is "just" a function: given a sequence of token vectors, produce a new
 
 ---
 
-### 2.2 `Self-Attention` — The Core Idea
+### 2.2 Self-Attention — "Which Words Matter to Me?"
 
+Read this sentence: *"The animal didn't cross the street because **it** was too tired."*
 
-Imagine you read this sentence:
+Who is "it"? You instantly know it means "the animal", not "the street" — your brain scans back over the sentence and links "it" to the most relevant earlier word. **That linking process is exactly what attention does inside a transformer.** Every word gets to look at every other word in the sentence in one step, and the model learns how much attention each word should pay to each other word.
 
 ```text
 The animal didn't cross the street because it was too tired.
@@ -84,10 +87,16 @@ for language processing. These models couldn't understand this relation between 
 
 #### Self-Attention
 
+<details>
+<summary>🔍 The math (optional)</summary>
 
+Each token's embedding is multiplied by three learned weight matrices to produce its Query, Key, and Value vectors: `Q = X·W_Q`, `K = X·W_K`, `V = X·W_V`.
 
 Self-Attention is the mechanism of the Transformer. It is used by LLM models to figure out how words relate to each other in a sentence - every token can directly look at every other token in one pass, with learned weights it determines attention scores. 
 
+```
+Attention(Q, K, V) = softmax( Q · Kᵀ / √d_k ) · V
+```
 
 To do this mathematically, the Transformer assigns three vectors Query, Key, Value (Q, K, V) to every single token .
 #### Query, Key, Value (Q, K, V)
@@ -104,9 +113,13 @@ The score between token i and j is `Qᵢ · Kⱼ`, and token i's output is a wei
 
 You compute a relevance score between your query and every key, convert those scores to weights (softmax), and return a weighted blend of the values.
 
+- Reader 1 might specialize in tracking grammar (subject → verb agreement).
+- Reader 2 might specialize in tracking what pronouns refer to.
+- Reader 3 might specialize in noticing nearby words.
 
 #### Softmax : converts to percentages
 
+**Recap:** One attention head can only notice one kind of pattern at a time; multiple heads let the model notice several kinds of patterns simultaneously, then combine the notes.
 
 
 In transformer self-attention : Every token simultaneously plays all three roles — it generates its own Q, K, and V vectors by multiplying its embedding by three learned weight matrices (W_Q, W_K, W_V).

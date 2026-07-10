@@ -1,14 +1,19 @@
-# Day 4 Lab — Reusable Prompt Library
+# Day 4 Lab — Prompt Library
 
 ## Objective
 
-Build a small Python module that:
+Write two prompt-builder functions and hand their output to a safe JSON parser:
 
-1. **Constructs prompts** via builder functions (`few_shot_classify`, `extract_json`, `summarize`, `rewrite`) that return standard `messages` lists.
-2. **Runs prompts** via a provider-flexible `run(messages, system)` helper that auto-detects an API key and falls back to a deterministic mock when none is present.
-3. **Parses structured output** safely with `json.loads` + `try/except`.
+1. `few_shot_classify(text, examples, labels)` — builds a few-shot classification prompt.
+2. `extract_json(text, fields)` — builds a JSON-extraction prompt.
+3. Feed the extraction reply through `parse_json_safe()` (already written for you).
 
-This lab is runnable with **no API key** — the mock path demonstrates the full flow.
+The mock LLM client, the `run(messages, system)` helper, and `parse_json_safe()` are all
+pre-written in `starter.py` — you don't need to touch them. The mock lets the whole lab
+run with **no API key**.
+
+See Day 4, Section 3 (Worked Example) in the curriculum for a fully worked version of
+`few_shot_classify` before you write your own.
 
 ---
 
@@ -57,6 +62,9 @@ USE_MOCK=true python solution.py
 
 ## Expected Output (mock path)
 
+This is the actual output of `python solution.py` with no key set — the mock is
+deterministic, so yours should match exactly:
+
 ```
 === Provider: MOCK ===
 
@@ -68,14 +76,6 @@ Result  : NEGATIVE
 Input   : "Please reschedule our meeting with Dr. Patel (d.patel@clinic.org) to 2026-07-15 to discuss Q3 budget."
 Parsed  : {'sender_name': 'Dr. Patel', 'sender_email': 'd.patel@clinic.org', 'meeting_date': '2026-07-15', 'meeting_topic': 'Q3 budget'}
 
---- summarize ---
-Input   : 245 chars
-Result  : [MOCK SUMMARY] Artificial intelligence is transforming industries...
-
---- rewrite ---
-Input   : 136 chars
-Result  : [MOCK REWRITE] Please provide your feedback at your earliest convenience...
-
 All demos complete.
 ```
 
@@ -83,15 +83,29 @@ All demos complete.
 
 ## Lab Tasks (starter.py)
 
-Open `starter.py` and complete the five `TODO` blocks:
+Open `starter.py` and complete the three `TODO` blocks:
 
-| TODO | What to implement |
-|------|-------------------|
-| 1 | `few_shot_classify(text, examples, labels)` — build messages list with examples |
-| 2 | `extract_json(text, fields)` — build messages list with field list in the prompt |
-| 3 | `summarize(text, bullets)` — build messages list for bullet-point summary |
-| 4 | `rewrite(text, style, max_pct)` — build messages list for rewriting |
-| 5 | `run(messages, system)` — detect key, call real API or return mock response |
+| TODO | What to implement | Where the pattern comes from |
+|------|-------------------|-------------------------------|
+| 1 | `few_shot_classify(text, examples, labels)` — build the messages list with labels + formatted examples + target line | Day 4 §3 (Worked Example) |
+| 2 | `extract_json(text, fields)` — build the messages list with field list, delimiters, and a JSON shape example | Day 4 §2.6 (Getting Clean JSON Out) |
+| 3 | In `demo()`, call `parse_json_safe(raw, fallback=...)` on the extraction reply | Day 4 §2.6 (safe parsing) |
+
+Run `python starter.py` after each TODO to check your progress — `NotImplementedError`
+means that TODO isn't done yet.
+
+---
+
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+|---|---|---|
+| `NotImplementedError: TODO 1...` | `few_shot_classify` still has the placeholder `raise` | Implement TODO 1 — return a messages list, not `None` |
+| `Result` is `[MOCK] No specific handler matched.` | The prompt text doesn't end with the exact target line `Review: "<text>" ->` | The mock looks for a line ending in `->` with no label after it — check your f-string has no trailing space or extra text after the arrow |
+| `Parsed` is `{'sender_name': None, ...}` (all `None`) | `extract_json` isn't mentioning `"JSON object"` or the reply doesn't parse | Make sure your instruction includes the phrase `JSON object`, and that fields are wrapped correctly |
+| `[WARN] JSON parse failed: ...` printed, then a `{}` or all-`None` dict | `parsed` fallback wasn't passed, or the raw reply had unexpected formatting | Pass `fallback={f: None for f in fields}` as shown in TODO 3 |
+| `TypeError: 'NoneType' object is not subscriptable` on `parsed` | TODO 3 not implemented — `parsed` is still `None` | Replace the placeholder line with the `parse_json_safe(...)` call |
+| Nothing happens / `ModuleNotFoundError: anthropic` | You set `ANTHROPIC_API_KEY` but didn't install the SDK | Either `pip install -r requirements.txt`, or unset the key to use the mock |
 
 ---
 

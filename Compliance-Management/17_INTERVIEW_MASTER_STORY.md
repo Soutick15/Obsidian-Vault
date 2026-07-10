@@ -1,18 +1,18 @@
 ================================================================================
-INTERVIEW MASTER STORY: NyAi COMPLIANCE SYSTEM
+INTERVIEW MASTER STORY: ComplianceManagementSystem COMPLIANCE SYSTEM
 ================================================================================
 ROLE: Senior Backend/Distributed Systems Engineer
 CONTEXT: Explaining the project to a Principal Architect during a 5+ YOE Interview.
 ================================================================================
 
-"Hi, I'm glad to walk you through the NyAi Compliance System, which was one of the most architecturally challenging and rewarding platforms I've worked on. It's a B2B SaaS platform that automates regulatory compliance for Indian enterprises. I'll break down the business problem, our architectural decisions, the data flows, and the scaling challenges we tackled."
+"Hi, I'm glad to walk you through the ComplianceManagementSystem Compliance System, which was one of the most architecturally challenging and rewarding platforms I've worked on. It's a B2B SaaS platform that automates regulatory compliance for Indian enterprises. I'll break down the business problem, our architectural decisions, the data flows, and the scaling challenges we tackled."
 
 --------------------------------------------------------------------------------
 1. THE BUSINESS PROBLEM & 2. WHY THE PRODUCT EXISTS
 --------------------------------------------------------------------------------
 In India, corporate compliance is incredibly complex. A mid-sized company might be subject to hundreds of acts, rules, and regulations (like the PF Act, Companies Act, GST, etc.), each with its own recurring filing deadlines. Missing a deadline can result in heavy financial penalties, revoked licenses, or even criminal liability for directors. 
 
-Historically, companies managed this via massive Excel sheets and manual calendar reminders, requiring expensive legal consultants to interpret the law. NyAi exists to solve this by providing a centralized, automated source of truth. We built an "MDM" (Master Data Management) system curated by Subject Matter Experts (SMEs), which pushes legal obligations down to individual corporate tenants, automatically generating recurring tasks and using AI to match uploaded evidence to those tasks. 
+Historically, companies managed this via massive Excel sheets and manual calendar reminders, requiring expensive legal consultants to interpret the law. ComplianceManagementSystem exists to solve this by providing a centralized, automated source of truth. We built an "MDM" (Master Data Management) system curated by Subject Matter Experts (SMEs), which pushes legal obligations down to individual corporate tenants, automatically generating recurring tasks and using AI to match uploaded evidence to those tasks. 
 
 --------------------------------------------------------------------------------
 3. END-TO-END USER JOURNEY
