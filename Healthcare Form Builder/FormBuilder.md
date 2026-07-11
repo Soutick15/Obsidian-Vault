@@ -1,5 +1,3 @@
-
-
 # Form Builder Module 
 
 It is a module of our Healthcare project.
@@ -35,7 +33,22 @@ I have hands-on experience with AWS and GCP services.
 
 -  I have worked on a Health care portal and in this project I worked in Form Builder module. 
 - The portal is used by US state governments to manage and onboard healthcare providers such as Doctors, Hospitals, Pharmacist, and Health Insurance companies. 
-- Provider register their details like ( specialty, service location, license Affiliation etc) when the submit —> Then their application go through an approval process, and become active providers on the platform . 
+- Provider register their details like 
+```
+specialty + service location + license + Affiliation etc
+			↓
+	provider submit the form
+			↓
+	Application goes through approval process
+			↓
+		approved
+			↓
+	Provier onboard on the platform, become active provider
+			
+
+```
+
+
 - Here the Providers register by filling out huge complicated forms for submitting licenses, credentials, etc so they can give the service to the needy people.
 - Through the platform common people can find the best and required service available according to their need.
 
@@ -141,8 +154,6 @@ I haven’t used this technology directly, but I know it’s used for event stre
 
 ---
 
-
-  
 
 **taxonomyInfo collection** : Here we can find all the relationship between Taxonomy, ProviderType etc based on golden configuration sheet.
 

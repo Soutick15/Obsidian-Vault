@@ -14,6 +14,7 @@ By the end of Day 1 you will be able to:
 - Define *token*, explain Byte-Pair Encoding (BPE) at an intuitive level, and estimate token counts for a piece of text.
 - Explain what embeddings are, why they are vectors, and how cosine similarity measures semantic closeness.
 - Define *context window* and explain why it constrains what you can send to a model.
+- Tokenize a short phrase and compute a cosine similarity by hand, then reproduce both with code.
 
 ---
 
@@ -67,9 +68,11 @@ Software developers often hear these terms used interchangeably. They are not th
 | Generative AI | Produces *new* content; not just classification/regression |
 | LLM | Generative AI operating on token sequences; trained on massive text |
 
+Recap: AI is the broadest umbrella; every LLM is a GenAI model, every GenAI model here is a Deep Learning model, every Deep Learning model is a Machine Learning model, and Machine Learning is one way (not the only way) to build AI.
+
 ---
 
-### 2.2 What is an LLM (Large Language Model)
+### 2.2 What an LLM Actually Is
 
 An LLM is a probability distribution over the next token given all previous sequence of tokens so far. This process is repeated token-by-token until a stop condition.
 
@@ -77,11 +80,14 @@ An LLM is an AI model trained on massive amounts of text data. It learns pattern
 
 Instead of looking up answers in a database, it predicts the most likely next token based on the input and the knowledge it learned during training. LLMs are used for tasks like question answering, code generation, summarization, translation, and conversational AI.
 
+That sounds abstract, so here is the everyday version: it works like the autocomplete on your phone keyboard, which looks at the last few words you typed and suggests the most likely next word — except an LLM does this with a vastly larger vocabulary, a vastly longer memory of what came before, and a model trained on a huge slice of the internet instead of just your own texting history.
 At every step the model does:
 
 ```
 P(next_token | token_1, token_2, ..., token_n)  →  sample one token  →  append  →  repeat
 ```
+
+("Sample" means the model picks one token, weighted by how likely it thinks each option is — not necessarily always the single most-likely one.)
 
 That's it. Everything else — answering questions, writing code, following instructions — is an emergent behaviour of training that distribution on enormous, diverse text.
 
@@ -128,11 +134,17 @@ Common mitigations:
 
 When we type any prompt in human readable language like English, LLM doesn't understand this language. It first breaks the sentence into smaller units called Token (tokens) that models can process.
 
+Recap: a token is a sub-word puzzle piece, not a word or a character; BPE builds its set of pieces from what appeared most often in training text, so common English words are cheap (one piece) and rare words, code, and non-English text are expensive (several pieces).
+
+Recap: an LLM repeatedly predicts one next token at a time from everything typed so far, and that simple loop — run billions of times during training — is what produces language ability, reasoning-like behaviour, and also its failure modes (hallucination, non-determinism).
+
 #### 2.3.0 What is a token?
 
 >A `token` is the smallest unit of text that an LLM model processes — not a character, not a word. Modern LLMs use sub-word tokenisers.
 >
 >A token can be : A whole word, Part of a word, A punctuation mark, A number, A symbol.
+
+A **token** is the basic unit a model reads and writes — not a character, not a word. Modern LLMs use sub-word tokenisers, meaning a token is often a chunk smaller than a whole word: think of tokens as puzzle pieces that get glued together to spell out words and sentences. Common words are usually a single piece; longer or rarer words get broken into two or more pieces.
 
 ```
 Text → Tokenizer → Tokens  
@@ -147,7 +159,7 @@ Text → Tokenizer → Tokens
 >
 >Cost and context limits are both measured in tokens, so understanding tokenisation lets you estimate API cost, check whether a document fits in the context window, and optimise prompts for efficiency.
 >
->Non-English text, code, or rare words cost more tokens per character.
+> Non-English text, code, or rare words cost more tokens per character, because those puzzle pieces were formed from whatever text the tokeniser was built from — mostly English web text.
 
 
 Rule of thumb (English text): 
@@ -162,12 +174,13 @@ Rule of thumb (English text):
 
 ```
 
-Examples with GPT-style BPE: Tokenizer breaks text into tokens. Or internally it may even assign token IDs:
+Concrete example — the phrase `"unbelievable"` is not common enough to be its own puzzle piece, so a BPE tokeniser splits it into smaller pieces it does recognise. Or internally it may even assign token IDs:
+
 
 ```
 "Hello"          → ["Hello"]                          1 token
 "Hello, world!"  → ["Hello", ",", " world", "!"]      4 tokens
-"unbelievable"   → ["un", "bel", "iev", "able"]       4 tokens
+"unbelievable"   → ["un", "believ", "able"]           3 tokens
 "2024-06-17"     → ["2024", "-", "06", "-", "17"]     5 tokens
 ```
 
@@ -186,17 +199,21 @@ Different LLM models have different tokenisers.  They do not Tokenise the Same W
 Tokenisation is Useful, Suppose the model has never seen as particular word before, so it can split it into smaller chunks which it already knows those smaller pieces. So it can understand the new word.
 
 ---
-#### 2.3.2 Byte-Pair Encoding (BPE) — intuition
+#### 2.3.2 Byte-Pair Encoding (BPE) — how the puzzle pieces are chosen
 
-BPE builds a vocabulary by iteratively merging the most frequent adjacent byte pairs in the training corpus:
+BPE builds its set of puzzle pieces (the *vocabulary*) by scanning huge amounts of text and repeatedly merging whichever pair of adjacent pieces appears most often, starting from individual characters:
+
+
+
+
 
 ```
-Step 0 (characters): h e l l o   w o r l d
-Step 1 (most common pair merged): h e l l o   w o r ld      ← "rl"->"rl" merged as "rld"... 
-                                                                (simplified; actual merges differ)
+Step (characters):         h e l l o   w o r l d
+merge most frequent pair : h e ll o   w o r l d  ("l"+"l" -> "ll")
+Merge again :              he ll o  w o r ld.    ("h"+"e" -> "he")
 ...
-After N merges: common words → single tokens
-               rare words   → several sub-word tokens
+After many merges: common words end up as one piece;
+               rare words stay split into several pieces.
 ```
 
 **Why does this matter to you as a developer?**
@@ -424,8 +441,7 @@ See `labs/common/day-01/README.md` for full instructions and expected output.
 ---
 **Q4. Why does a rare or non-English word tend to cost more tokens than a common English word?**
 
-BPE builds its vocabulary from the most frequent byte-pair merges in the training corpus (mostly English web text). Rare or non-English words did not appear frequently enough to earn a single merged token, so they are split into many sub-word or even character-level tokens.
-
+BPE builds its vocabulary from the most frequent merges in the training corpus (mostly English web text). Rare or non-English words did not appear frequently enough to earn a single merged token, so they are split into many sub-word or even character-level tokens.
 
 **Q7. Give two concrete reasons why an LLM might produce a factually wrong answer.**
 
@@ -442,7 +458,7 @@ BPE builds its vocabulary from the most frequent byte-pair merges in the trainin
 **Q1. "Can you explain what a large language model is to a non-technical stakeholder?"**
 
 
-An LLM is a software system trained on enormous amounts of text — think most of the internet — to predict what word (more precisely, what token) comes next in a sequence. Through that training it learns grammar, facts, reasoning patterns, and writing styles. When you send it a prompt, it generates a continuation token by token. Despite this simple mechanism, well-trained models exhibit surprisingly powerful language abilities, which is why we can use them for tasks like summarisation, Q&A, code generation, and customer support.
+An LLM is a software system trained on enormous amounts of text — think most of the internet — to predict what word (more precisely, what token) comes next in a sequence. Through that training it learns grammar, facts, reasoning patterns, and writing styles. When you send it a prompt, it generates a continuation token by token. Despite this simple mechanism, well-trained models exhibit surprisingly powerful language abilities, which is why they can be used for tasks like summarisation, question answering, code generation, and support automation.
 
 ---
 

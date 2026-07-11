@@ -60,19 +60,20 @@ Days 6–15:          Role Track         (Developer | QA | DevOps)
 
 ## How to Use Each Day
 
-Each curriculum day follows the same 7-section template:
+Each curriculum day follows the same 8-section template:
 
 1. **Learning objectives** — 3–5 concrete things you will know or be able to do.
 2. **Concept reading** — explanation written for practitioners
-3. **Hands-on lab** — a runnable Python exercise in `labs/common/day-NN/` (Days 1–5) or `labs/<track>/day-NN/` (Days 6–15).
-4. **Self-check quiz** — 5–8 questions with answers; test yourself before moving on.
-5. **Concept Deep-Dive Q&A** — 5–10 questions that test deeper, applied understanding, with model answers.
-6. **Further reading** — curated links if you want to go deeper. (Researcher Docs are for Expert Only e.g: https://arxiv.org/abs/2201.11903)
-7. **Key takeaways** — bullet summary to review before the next day.
+3. **Worked example** — a fully solved example that mirrors the lab, so it feels familiar before you start. *(In the common Days 1–5 now; rolling out to the track days.)*
+4. **Hands-on lab** — a runnable Python exercise in `labs/common/day-NN/` (Days 1–5) or `labs/<track>/day-NN/` (Days 6–15).
+5. **Self-check quiz** — 5–8 questions with answers; test yourself before moving on.
+6. **Concept Deep-Dive Q&A** — 5–10 questions that test deeper, applied understanding, with model answers.
+7. **Further reading** — curated links if you want to go deeper. (Researcher Docs are for Expert Only e.g: https://arxiv.org/abs/2201.11903)
+8. **Key takeaways** — bullet summary to review before the next day.
 
 **Workflow per day:**
 ```
-Read concept section → Run the lab → Take the quiz → Review the Concept Deep-Dive Q&A → Skim key takeaways
+Read concept section → Study the worked example → Run the lab → Take the quiz → Review the Concept Deep-Dive Q&A → Skim key takeaways
 ```
 
 ---
@@ -86,7 +87,7 @@ A self-contained 5-day primer that builds exactly the Python the labs use. **Ski
 | 1 | Running Python & the basics | Text-stats CLI script | [Day-01](curriculum/python-foundation/Day-01-running-python-and-basics.md) |
 | 2 | Data structures & functions | Process employee records | [Day-02](curriculum/python-foundation/Day-02-data-structures-and-functions.md) |
 | 3 | Files, JSON & modules | Read the corpus, extract, write JSON | [Day-03](curriculum/python-foundation/Day-03-files-json-and-modules.md) |
-| 4 | Classes, type hints & Pydantic | Validate data with a Pydantic model | [Day-04](Day-04-OOPs-typing-and-pydantic.md) |
+| 4 | Classes, type hints & Pydantic | Validate data with a Pydantic model | [Day-04](curriculum/python-foundation/Day-04-classes-typing-and-pydantic.md) |
 | 5 | APIs, async & testing | Module + pytest + `--selftest` CLI | [Day-05](curriculum/python-foundation/Day-05-apis-async-and-testing.md) |
 
 ---

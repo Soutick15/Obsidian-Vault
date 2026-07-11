@@ -25,34 +25,39 @@ Almost every modern LLM (GPT, Llama, Gemini, Claude, Mistral, DeepSeek) is based
 
 GPT - Generative pre-trained transformer. Transformer is a generative in nature based on pre-trained data.
 
-On Day 1 you saw that text becomes tokens and tokens become embeddings. 
-
+Yesterday (Day 1) you saw that text becomes tokens, and tokens become vectors (lists of numbers) called embeddings. Today's question: what happens to those vectors on their way to becoming a prediction?
+Picture an assembly line. Text goes in one end; a next-word prediction comes out the other. In between, the vectors pass through a stack of identical "processing stations" called transformer blocks. Each station does the same two jobs, one after another:
+1. **Look around** — every word gets to check in with every other word in the sentence and pick up useful context. This is called self-attention (2.2 below).
+2. **Think it over** — each word, now updated with context, spends a moment processing that information on its own. This is called the feed-forward network (2.5 below).
+Stack enough of these stations — a real model may stack dozens of them — and the output vectors become rich enough to predict, remarkably well, what word should come next.
 
 The transformer takes those embeddings and transforms them through a stack of identical blocks, ultimately producing a probability distribution over the vocabulary at each position.
 
 ```
 Input text
 	↓
-[Tokeniser]          "The cat sat" → [464, 3797, 3332]
+[Tokenizer]      "The cat sat" → [464, 3797, 3332](three token IDs)
 	↓
-[Token Embedding] integer IDs → dense vectors  shape: (seq_len, d_model)
+[Embedding]      token IDs → vectors (lists of numbers)
     +
-[Positional Encoding] inject order information
+[Positional Encoding] add "which position am I?" inforation
 	↓
-┌────────────────────────────────────┐
-│  Transformer Block × N             │
-│  ┌──────────────────────────────┐  │
-│  │  Multi-Head Self-Attention   │  │
-│  │  + Layer Norm + Residual     │  │
-│  └──────────────────────────────┘  │
-│  ┌──────────────────────────────┐  │
-│  │  Feed-Forward Network (FFN)  │  │
-│  │  + Layer Norm + Residual     │  │
-│  └──────────────────────────────┘  │
-└────────────────────────────────────┘
+┌──────────────────────────────────────────┐
+│  Transformer Block × (repeated N times)  │  
+│  ┌──────────────────────────────┐        │      
+│  │  Step 1: Look around         │        │
+│  │ + (Multi-Head Self-Attention)│        │
+│  └──────────────────────────────┘        │
+│  ┌──────────────────────────────┐        │
+│  │  Step 2: Think it over       │        │
+│  │  + (Feed-Forward Network)    │        │
+│  └──────────────────────────────┘        │
+└──────────────────────────────────────────┘
 	↓
-[Output Linear + Softmax]  → logits / probabilities over vocabulary
+[Prediction] → probabilities for "what word comes next?"
 ```
+
+**Recap:** A transformer is a stack of identical stations, and every station does two things: let words look at each other for context, then let each word think it over alone.
 
 The model is "just" a function: given a sequence of token vectors, produce a new set of contextualised vectors (and ultimately a next-token prediction).
 
@@ -89,6 +94,7 @@ for language processing. These models couldn't understand this relation between 
 
 <details>
 <summary>🔍 The math (optional)</summary>
+</details>
 
 Each token's embedding is multiplied by three learned weight matrices to produce its Query, Key, and Value vectors: `Q = X·W_Q`, `K = X·W_K`, `V = X·W_V`.
 
