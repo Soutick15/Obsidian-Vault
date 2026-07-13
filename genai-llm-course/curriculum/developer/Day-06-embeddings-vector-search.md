@@ -21,11 +21,19 @@ By the end of Day 6 you will be able to:
 
 ### 2.1 Keyword Search vs. Semantic Search
 
-**Keyword (lexical) search** — systems like Elasticsearch or `LIKE` in SQL — match documents that contain the exact query terms. They are fast, interpretable, and great when users know the precise vocabulary. They fail when a document uses synonyms or paraphrases the concept differently.
+##### 2.1.0 Keyword (lexical) search
+Systems like Elasticsearch or `LIKE` query in SQL — Find documents containing the same words that the user searched for. It does not works on meaning. They fail when a document uses synonyms or paraphrases the concept differently. They are fast, interpretable, and great when users know the precise vocabulary. 
 
-**Semantic search** works on meaning. A query like *"What is the parental leave policy?"* can match a document that says *"secondary caregiver leave is 6 weeks paid"* even with zero shared words, because both are encoded as nearby vectors in embedding space.
+Keyword (lexical) search uses inverted Index to find out the document very fast. We will learn about it later, 
 
-The tradeoff: keyword search is deterministic and explainable; semantic search handles vocabulary mismatch but can surface plausible-sounding but wrong matches. Production systems often combine both — a technique called **hybrid search**.
+##### 2.1.1 Semantic search 
+It works on meaning. A query like *"What is the parental leave policy?"* can match a document that says *"secondary caregiver leave is 6 weeks paid"* even with zero shared words, because both are encoded as nearby vectors in embedding space.
+
+##### 2.1.2 The tradeoff: 
+Keyword search is deterministic and explainable; 
+semantic search handles vocabulary mismatch but can surface plausible-sounding but wrong matches. 
+
+Production systems often combine both — a technique called **hybrid search**.
 
 ---
 

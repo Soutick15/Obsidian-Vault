@@ -280,15 +280,20 @@ Embeddings → Vectors → Cosine Similarity → How similar are these vectors? 
 ```
 
 - An **embedding** is a fixed-length numerical vector produced by a model that represents the semantic content of a piece of text. 
+- Embeddings convert words, sentences, or documents into numerical vectors. Text with similar meanings tends to produce vectors that are close together in vector space. Similarity metrics (such as cosine similarity) measure how close those vectors are.
 - Semantically similar text produces vectors that are close in the vector space, measured by cosine similarity. 
-- Embeddings are widely used in semantic search, recommendation systems, vector databases, and Retrieval-Augmented Generation (RAG).
+- Embeddings are widely used in 
+	- semantic search : search by meaning instead of keyword.
+	- recommendation systems, 
+	- vector databases, and 
+	- Retrieval-Augmented Generation (RAG).
 
 
 LLM-derived embeddings place semantically similar text close together in vector space.
 
 Let's simplify that. Imagine we have the below sentences, and the converted to numbers, because computers compare numbers much more easily than sentences. 
 
-This long list of numbers is called a **vector**. The vector is typically hundreds to thousands of floats.
+
 
 
 ```
@@ -301,7 +306,12 @@ This long list of numbers is called a **vector**. The vector is typically hundre
 "The stock market crashed"  →  [-0.55, 0.72, -0.12, ..., 0.91]  (384 floats, different)
 ```
 
-Notice in the above example "The cat sat on the mat" and "A kitten rested on a rug" generates similar numbers. Means the meaning is similar. But the "The stock market crashed" generated vector is totally different.
+This long list of numbers is called a **vector**. The vector is typically hundreds to thousands of floats.
+
+Notice in the above example "The cat sat on the mat" and "A kitten rested on a rug" They produces vectors that are close to each other in vector space.
+Means the meaning is similar even though the words are different. 
+
+But the "The stock market crashed" generated vector is totally different.
 
 
 ```
