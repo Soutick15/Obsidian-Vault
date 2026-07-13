@@ -21,9 +21,9 @@ By the end of Day 2 you will be able to:
 
 ### 2.1 The Big Picture — From Words to a Prediction
 
-Almost every modern LLM (GPT, Llama, Gemini, Claude, Mistral, DeepSeek) is based on the **Transformer Architecture** introduced in the 2017 paper:
+Yesterday (Day 1) you saw that text becomes tokens, and tokens become vectors (lists of numbers) called embeddings. Today's question: what happens to those vectors on their way to becoming a prediction?
 
-GPT - Generative pre-trained transformer. Transformer is a generative in nature based on pre-trained data.
+Picture an assembly line. Text goes in one end; a next-word prediction comes out the other. In between, the vectors pass through a stack of identical "processing stations" called transformer blocks. Each station does the same two jobs, one after another:
 
 Yesterday (Day 1) you saw that text becomes tokens, and tokens become vectors (lists of numbers) called embeddings. Today's question: what happens to those vectors on their way to becoming a prediction?
 Picture an assembly line. Text goes in one end; a next-word prediction comes out the other. In between, the vectors pass through a stack of identical "processing stations" called transformer blocks. Each station does the same two jobs, one after another:

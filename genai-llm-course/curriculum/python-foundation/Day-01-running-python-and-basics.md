@@ -95,7 +95,12 @@ A virtual environment (venv) is an isolated Python environment for a project. It
 
 > **Why do we use a virtual environment?**
 
-Different projects may require different versions of the same package. Suppose Project A uses Django 5 and Project B uses Django 4. If I install everything globally, one project may break because the package versions conflict. Using a virtual environment avoids version conflicts because each project has its own dependencies.
+Different projects may require different versions of the same package. S
+uppose -
+	Project A uses Django 5 
+	Project B uses Django 4. 
+
+If I install everything globally, one project may break because the package versions conflict. Using a virtual environment avoids version conflicts because each project has its own dependencies.
 
 
 ```
@@ -364,7 +369,9 @@ print (greeting,",", "welcome to", Address) #Hello , welcome to Bengaluru
 
 ```
 
-`input()` : Used to take some input value from the user. `input()` always returns a `str`, by default. Even if the user enter a number, it will internally convert it into a string value. 
+`input()` : Used to take some input value from the user. 
+
+`input()` always returns a `str`, by default. Even if the user enter a number, it will internally convert it into a string value. 
 
 Always  Convert it according to your requires data type : If you need to do arithmetic with the value you must convert it explicitly.
 
@@ -550,13 +557,17 @@ Python has no `main()` method like java. When you run a Python file, Python star
 Example:
 
 ```
-print("Hello") # Hello ↓
-print("World") # World ↓
+↓
+	print("Hello") # Hello
+↓
+	print("World") # World
+↓
 ```
 
 
 
-When Python runs a file directly, it sets the special variable `__name__` to `"__main__"`. When the same file is *imported* as a module, `__name__` is set to the module name instead.
+When Python runs a file directly, it sets the special variable `__name__` to `"__main__"`. 
+When the same file is imported as a module, `__name__` is set to the module name instead of the `"__main__"`
 
 ```python
 def greet(name):
@@ -632,19 +643,11 @@ Words per starting letter:
 
 **Q6. What is the purpose of `if __name__ == "__main__":`?**
 
-<details>
-<summary>Show answer</summary>
-
 It guards code that should run only when the file is executed directly, not when it is imported as a module. When Python runs a file directly it sets `__name__` to `"__main__"`; on import it is set to the module's own name. The guard prevents side-effects (like printing or starting a process) when another file imports your functions.
-
-</details>
-
-
 
 ---
 
 ## 6. Key Takeaways
-
 
 - Always use a virtual environment (`python3 -m venv .venv`) and activate it before installing packages.
 - The REPL is ideal for quick experiments; `.py` files are for repeatable, shareable work.

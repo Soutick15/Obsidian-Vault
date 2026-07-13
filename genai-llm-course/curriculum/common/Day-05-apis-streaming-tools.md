@@ -545,7 +545,9 @@ The lab wires these same pieces — a shared `history` list, a tool-detection ch
 **Provider detection:**
 - If `ANTHROPIC_API_KEY` is set → uses real Claude streaming + tools
 - Elif `OPENAI_API_KEY` is set → uses real OpenAI streaming + tools
-- Otherwise → runs a deterministic **mock** that simulates streaming and auto-triggers the tool
+- Otherwise → runs a deterministic **mock** that simulates streaming and triggers the tool — this is the path Section 3 just walked through
+
+**What's already given** in `starter.py` — the mock "model client" (`mock_check_for_tool_call`, `mock_stream_answer`), the streaming print helper (`stream_print`), the tool schemas, the safe calculator, and the real Anthropic/OpenAI implementations (for if you have a key). **What you'll write:** the `mock_chat` function that wires them together — three numbered TODOs, each mapped to a step in Section 3.
 
 **Files:**
 

@@ -32,7 +32,8 @@ Python ships with four general-purpose collection types. Picking the right one m
 | `dict`  | `{"a": 1}`  | Yes (3.7+) | Yes                       | Keys: No, Values: Yes | Key-based lookup                                           |
 | `set`   | `{1, 2, 3}` | No         | Yes, Values are immutable | No                    | Deduplication; membership tests; set math                  |
 
-#### List [ ]
+---
+#### 2.1.0 List [ ]
 
 ```python
 # List — mutable, ordered
@@ -40,7 +41,7 @@ Python ships with four general-purpose collection types. Picking the right one m
 fruits = ["apple", "banana", "cherry"]
 
 # add to end
-fruits.append("date")          #['apple', 'banana', 'cherry', 'date']
+fruits.append("date")       #['apple', 'banana', 'cherry', 'date']
 
 # insert at specific index, all elements shift to right
 fruits.insert(1, "avocado")#['apple', 'avocado', 'banana', 'cherry', 'date']
@@ -105,7 +106,7 @@ address.reverse()
 ```
 
 ---
-#### Tuple ( )
+#### 2.1.1 Tuple ( )
 
 ```python
 
@@ -136,7 +137,7 @@ print(y)                        # 7.5
 
 
 ---
-#### Dict (key-value)
+#### 2.1.2 Dict (key-value)
 
 ```python
 
@@ -161,8 +162,9 @@ print(person["Salary"]) # KeyError: 'Salary'
 
 # Does not Throws Error if key not found
 # If no value is returned, default value is returned
+
 print(person.get("Salary", 10000)) # 10000
-print(person.get("age", 0))        # 0
+print(person.get("age", 0))        # 30
 
 
 
@@ -209,11 +211,12 @@ person = {
 ```
 
 ----
-#### Set { } : unique, unordered
+#### 2.1.3 Set { } : unique, unordered
 
 ```python
 #duplicates will be ignored
 set_items = {3, "python", 1, "python", "Java", 2, 3}
+
 print(set_items)           # {1, 2, 3, 'python', 'Java'}
 ```
 
@@ -327,27 +330,106 @@ t = (1, 2, 3)
 
 ### 2.4 Iteration Patterns
 
+**Basic Iteration** : Basic `for` loop, it iterates over each element.
+
 ```python
 colors = ["red", "green", "blue"]
 
-# Basic for loop
+# We are not accessing the index
 for color in colors:
-    print(color)
+    print(color)      
+```
+
+```text
+red
+green
+blue
+```
+
+---
+
+**enumerate()** :  It gets index and value together
+
+```python
+colors = ["red", "green", "blue"]
 
 # enumerate — get index and value together
 for i, color in enumerate(colors):
     print(f"{i}: {color}")
+    
+    
+# ------- without enumerate()-----
+# This also did same thing but above loop is recommended
+for i in range(len(colors)):
+    print(i, colors[i])
 
-# zip — iterate two sequences in lockstep
+
+```
+
+```terminal
+0: red
+1: green
+2: blue
+```
+
+---
+
+**zip()** : It iterate two sequences in lockstep
+
+```python
+colors = ["red", "green", "blue"]    
 sizes = ["S", "M", "L"]
+
 for color, size in zip(colors, sizes):
     print(f"{color} / {size}")
+```
 
+```
+red / S
+green / M
+blue / L
+```
+
+
+```python
+ids = [101, 102, 103]
+names = ["Alice", "Bob", "Charlie" ]
+
+for id, name in zip(ids, names):
+	print(f"{id} : {name}")
+```
+
+```
+101 : Alice
+102 : Bob
+103 : Charlie
+```
+
+---
+**Dictionary Iteration** with **items()**
+
+```python
 # dict.items() — key + value pairs
-scores = {"Alice": 95, "Bob": 82, "Carol": 91}
+
+scores = {
+	"Alice": 95, 
+	"Bob": 82, 
+	"Carol": 91
+	}
+
 for name, score in scores.items():
     print(f"{name}: {score}")
+```
 
+```
+Alice: 95
+Bob: 82
+Carol: 91
+```
+
+---
+
+```python
 # dict.keys() and dict.values()
 print(list(scores.keys()))    # ["Alice", "Bob", "Carol"]
 print(list(scores.values()))  # [95, 82, 91]
@@ -359,27 +441,91 @@ print(list(scores.values()))  # [95, 82, 91]
 
 Comprehensions are concise, readable alternatives to `for` loops that build new collections.
 
-**Syntax pattern:** `[expression for item in iterable if condition]`
+
+#### 2.5.1 **List comprehension — squares of even numbers**
+
+**Syntax pattern :**  Build List
+
+```PYTHon
+[
+	expression 
+	for item in iterable 
+	if condition
+]
+
+[
+	 expression
+	 for item in collection
+]
+
+```
 
 ```python
 numbers = [1, 2, 3, 4, 5, 6, 7, 8]
 
-# List comprehension — squares of even numbers
-even_squares = [n ** 2 for n in numbers if n % 2 == 0]
+even_squares = [
+	n ** 2 
+	for n in numbers 
+	if n % 2 == 0
+	]
+	
 print(even_squares)   # [4, 16, 36, 64]
 
-# Dict comprehension — name → length
-names = ["Alice", "Bob", "Carol"]
-name_lengths = {name: len(name) for name in names}
-print(name_lengths)   # {"Alice": 5, "Bob": 3, "Carol": 5}
+```
 
-# Set comprehension — unique first letters
+---
+#### 2.5.2 Dict comprehension
+
+```PYTHon
+{
+	key:value
+	for item in dict 
+}
+```
+
+
+**print name and their length** 
+
+```python
+names = ["Alice", "Bob", "Carol"]
+
+name_lengths = {
+	name: len(name)
+	for name in names
+	}
+	
+print(name_lengths)   # {"Alice": 5, "Bob": 3, "Carol": 5}
+```
+
+---
+#### 2.5.3 Set comprehension — unique first letters
+
+```python
+{
+value
+for ...
+}
+```
+
+```python
 words = ["apple", "avocado", "banana", "blueberry", "cherry"]
-first_letters = {word[0] for word in words}
+
+first_letters = {
+	word[0] 
+	for word in words
+	}
+	
 print(first_letters)  # {"a", "b", "c"}
 ```
 
-> Use comprehensions when they fit on one or two readable lines. If the logic grows complex, a regular `for` loop is clearer.
+---
+
+#### 2.5.4 When should you use a list comprehension instead of a `for` loop?
+
+>Use a **list comprehension** when you're creating a new collection with simple transformation or filtering.
+>
+>Use a **regular `for` loop** when the logic is more complex, involves multiple steps, side effects (like logging or database calls), or readability would suffer.
+
 
 ---
 
@@ -398,31 +544,46 @@ print(greet("Alice"))   # Hello, Alice!
 
 #### Argument types
 
+##### Positional args — must be passed in order
+
 ```python
-# Positional args — must be passed in order
 def add(x, y):
     return x + y
 
 add(3, 4)       # 7
 add(y=4, x=3)   # keyword call — order doesn't matter
+```
 
-# Default values — must come after positional args
+
+##### Default values — must come after positional args
+
+```python
 def power(base, exponent=2):
     return base ** exponent
 
 power(3)        # 9  (uses default exponent=2)
 power(3, 3)     # 27
+```
 
-# *args — collects extra positional args into a tuple
+
+##### `*args` — collects extra positional args into a tuple
+
+```python
 def total(*numbers):
     return sum(numbers)
 
-total(1, 2, 3, 4)   # 10
+print(total(1, 2))             # 3
+print(total(1, 2, 3, 4))       # 10
+print(total(5, 2, -1, 0, -2))  # 4
+```
 
-# **kwargs — collects extra keyword args into a dict
+
+##### `**kwargs` — collects extra keyword args into a dict
+
+```python
 def show_info(**details):
     for key, value in details.items():
-        print(f"  {key}: {value}")
+        print(f"  {key}: {value}")# name: Alice role: Engineer level: 3
 
 show_info(name="Alice", role="Engineer", level=3)
 ```
@@ -478,13 +639,106 @@ print(counter)  # 1
 
 ### 2.8 Lambda Functions
 
-`lambda` creates a short, anonymous function in a single expression. It is most useful as an argument to higher-order functions like `sorted()`, `map()`, and `filter()`.
+- `lambda` creates a short, anonymous function in a single expression. 
+- There is no `return` keyword inside lambda function . Python automatically returns the result of the expression.
+- It is most useful as an argument to higher-order functions like `sorted()`, `map()`, and `filter()`.
+
+**lambda syntax :** 
+```python
+lambda parameters : expression
+```
+
+#### 2.8.0 Normal function vs Lambda function
+
+##### Example 1 - square root of a number 
 
 ```python
-# lambda syntax: lambda args: expression
+# normal function
+def square(n):
+    return n * n
+    
+print(square(5)) # 25
+
+
+# ---- lambda function ----
 square = lambda n: n ** 2
 print(square(5))   # 25
+    
+```
 
+---
+##### Example 2 - addition of two numbers
+
+```python
+# normal function
+def add(a, b):
+    return a + b
+
+print(add(5, 3))      # 8
+
+    
+# ---- lambda function ----
+add = lambda a, b: a + b
+print(add(5, 3)).     # 8
+```
+
+---
+##### Example  3 - check if a number is even or odd
+
+```python
+# normal function
+def is_even(n):
+return n % 2 == 0
+
+print(is_even(8))
+  
+
+# ---- lambda function ----
+is_even = lambda n : n%2 == 0
+print(is_even(7))
+```
+
+---
+##### Example  4 - Sort students based on marks
+
+```python
+# normal function
+students = [
+    ("Alice", 90),
+    ("Bob", 80),
+    ("Charlie", 95)
+]
+
+def get_marks(student):
+return student[1]
+
+
+students.sort(key=get_marks)
+
+print(students) # [('John', 75), ('Bob', 80), ('Alice', 90), ('Charlie', 95)]
+
+
+# ---- lambda function ----
+
+# sort by marks
+students.sort(key=lambda student: student[1])
+
+
+print(students) 
+# [('John', 75), ('Bob', 80), ('Alice', 90), ('Charlie', 95)]
+
+
+# sort by name
+students.sort(key=lambda student: student[0])
+
+print(students) 
+# [('Alice', 90), ('Bob', 80), ('Charlie', 95), ('John', 75)]
+```
+
+---
+##### Example - 4
+
+```python
 # Common use — sort by a derived key
 words = ["banana", "fig", "apple", "cherry"]
 words.sort(key = lambda w: len(w))
@@ -498,28 +752,175 @@ words.sort(key=by_length)
 ```
 
 ---
+### 2.8.1 Lambda with map()
 
-### 2.9 Error Handling
+
+```python
+numbers = [1,2,3,4]
+result = []
+
+for n in numbers:
+	result.append(n*n)
+
+print(result)        # [1, 4, 9, 16]
+```
+
+```python
+numbers = [1,2,3,4]
+result = map(
+	lambda n: n*n,
+	numbers
+)
+print(list(result))  # [1, 4, 9, 16]
+```
+
+---
+### 2.8.2 Lambda with filter()
+
+```python
+numbers = [1,2,3,4,5,6]
+
+result = filter(
+	lambda n: n % 2 == 0,
+	numbers
+)
+
+print(list(result)) # [2, 4, 6]
+```
+
+---
+### 2.9 Lambda vs Comprehension
+
+- Python developers usually prefer Comprehension over lambda. 
+- A lambda can contain **only one expression**. We cannot write multiple statements inside a lambda. If the logic is more than one expression, use a normal `def`.
+
+**Example 1 - square each number from a list**
+
+```python
+# lambda example
+numbers = [1, 2, 3, 4, 5, 6]
+
+squares = list(map(lambda n:n*n,numbers))
+
+print(squares) # [1, 4, 9, 16, 25, 36]
+```
+
+```python
+# prefered comprehensions example
+numbers = [1, 2, 3, 4, 5, 6]
+squares = [
+	n*n 
+	for n in numbers
+]
+print(squares) # [1, 4, 9, 16, 25, 36]
+```
+
+
+**Example 2 - filter even numbers from  a list**
+
+```python
+# lambda example
+numbers = [1, 2, 3, 4, 5, 6]
+even_numbers = list(filter(lambda n:n%2==0,numbers))
+print(even_numbers) # [2, 4, 6]
+```
+
+```python
+# prefered comprehensions example
+numbers = [1, 2, 3, 4, 5, 6]
+even_numbers = [
+	n 
+	for n in numbers 
+	if n%2==0
+]
+print(even_numbers) # [2, 4, 6]
+```
+
+---
+
+### 2.10 Error Handling
 
 Python signals errors by **raising exceptions**. Use `try / except` to handle them gracefully.
 
+#### Basic `try` / `except`
+
+- Use the `try` block to write **code that may raise an exception**.
+
+- Use `except` to handle the exception. It is similar to `catch` block in Java.
+
+
 ```python
-# Basic try/except
+def safe_divide(a, b):
+	# Code that may raise an exception
+	try:
+		result = a / b
+		print("valid input")
+		print (result)
+
+	# Runs if an exception occurs. 
+	except ZeroDivisionError:
+		print("Cannot divide by zero.")
+	
+	# ALWAYS runs — good for cleanup
+	finally:
+		print("safe_divide finished.")
+```
+
+#### `finally`: 
+
+`finally` always guaranteed run — whether an exception occurred or not, and even if the function returns mid-way. 
+
+It is used for  It is typically used for
+-   Close a file
+-   Close a database connection
+-   Release a lock
+-   Close a network socket
+
+---
+#### The `else` Block
+
+Instead of mixing risky code + non-risky code inside  `try`, Python encourages separating them.
+
+notice in this example, only the line `result = a / b` is a risky code and may raise a `ZeroDivisionError`. other lines of code are not risky. 
+
+So we can separate them in the else block.
+
+``` python
+result = a / b        # Code that may raise ZeroDivisionError
+print("Valid input")  # Normal processing (not risky)
+print(result)         # Normal processing (not risky)
+```
+
+```python
 def safe_divide(a, b):
     try:
         result = a / b
+
     except ZeroDivisionError:
         print("Cannot divide by zero.")
         return None
+
     else:
-        # runs only if no exception was raised
+        # Runs only if no exception occurs.
+        print("Valid input")
+        print(result)
         return result
+
     finally:
         # ALWAYS runs — good for cleanup
         print("safe_divide finished.")
 
-print(safe_divide(10, 2))   # prints result
-print(safe_divide(10, 0))   # prints error message, returns None
+
+print(safe_divide(10, 2))
+# Valid input
+# 5.0
+# safe_divide finished.
+# 5.0
+
+print(safe_divide(10, 0))
+# Cannot divide by zero.
+# safe_divide finished.
+# None
 ```
 
 #### Catching multiple exceptions
@@ -533,6 +934,7 @@ except KeyError:
     print("Key not found in dict.")
 except ValueError as e:
     print(f"Bad value: {e}")
+    
 ```
 
 #### Raising exceptions
@@ -540,7 +942,9 @@ except ValueError as e:
 ```python
 def set_age(age):
     if not isinstance(age, int) or age < 0:
-        raise ValueError(f"Age must be a non-negative integer, got {age!r}")
+        raise ValueError(
+	        f"Age must be a non-negative integer, got {age!r}"
+	        )
     return age
 ```
 
@@ -585,26 +989,20 @@ python3 curriculum/python-foundation/exercises/day-02/starter.py
 Expected output after completing all TODOs matches the output of `solution.py`.
 
 ---
-
 ## 4. Self-Check Quiz
 
 **Q1. You need a collection of 500 user IDs where you frequently check "is this ID already seen?" and never need to preserve insertion order. Which type is best?**
 
-<details>
-<summary>Show answer</summary>
 
 A `set`. Membership testing (`id in seen`) is O(1) for sets versus O(n) for lists. Sets automatically discard duplicates, which makes them ideal for "have I seen this?" tracking.
 
-</details>
+
 
 **Q2. What does the following slice return? `"abcdefgh"[2:7:2]`**
 
-<details>
-<summary>Show answer</summary>
-
 `"ceg"`. Starting at index 2 (`c`), stopping before index 7 (`h`), stepping by 2: indices 2, 4, 6 → characters `c`, `e`, `g`.
 
-</details>
+
 
 **Q3. What is the output of this code?**
 
@@ -617,9 +1015,6 @@ print(append_item(1))
 print(append_item(2))
 ```
 
-<details>
-<summary>Show answer</summary>
-
 ```
 [1]
 [1, 2]
@@ -627,29 +1022,10 @@ print(append_item(2))
 
 This is the **mutable default argument** trap. The default list `[]` is created once when the function is defined, not on every call. Subsequent calls share the same list object. The safe fix is `def append_item(value, lst=None): if lst is None: lst = []`.
 
-</details>
 
-**Q4. Rewrite this loop as a single dict comprehension.**
 
-```python
-result = {}
-for word in ["cat", "dog", "elephant"]:
-    result[word] = len(word)
-```
-
-<details>
-<summary>Show answer</summary>
-
-```python
-result = {word: len(word) for word in ["cat", "dog", "elephant"]}
-```
-
-</details>
 
 **Q5. A function is called with `func(1, 2, c=3, d=4)`. Write a signature that captures all four arguments.**
-
-<details>
-<summary>Show answer</summary>
 
 ```python
 def func(*args, **kwargs):
@@ -659,26 +1035,12 @@ def func(*args, **kwargs):
 
 `*args` collects extra positional arguments into a tuple; `**kwargs` collects extra keyword arguments into a dict.
 
-</details>
+
 
 **Q6. What exception does `scores["Zara"]` raise when `"Zara"` is not a key in `scores`?**
 
-<details>
-<summary>Show answer</summary>
-
 `KeyError`. To avoid it, use `scores.get("Zara")` which returns `None` by default, or `scores.get("Zara", 0)` for a custom default.
 
-</details>
-
-**Q7. What is the difference between the `else` and `finally` clauses in a `try` block?**
-
-<details>
-<summary>Show answer</summary>
-
-- `else` runs **only if no exception was raised** in the `try` block. It is useful for code that should execute on success but not be wrapped in the `try` itself.
-- `finally` runs **always** — whether or not an exception occurred, and even if the function returns mid-way. It is used for guaranteed cleanup (closing files, releasing locks).
-
-</details>
 
 ---
 
@@ -686,26 +1048,23 @@ def func(*args, **kwargs):
 
 **Q1. Python lists and tuples both store ordered sequences. Under the hood, what is the key difference that makes tuple "hashable" and list not?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 CPython stores both as arrays of object pointers. The critical difference is **mutability**: a tuple's contents cannot change after creation, which guarantees that its hash value is stable for its entire lifetime. Python's hashing contract requires that `hash(obj)` never change while `obj` is in use as a dict key or set element. Because a list can be modified at any time, it cannot satisfy this contract — so `list.__hash__` is set to `None` and Python raises `TypeError: unhashable type: 'list'` if you try to use one as a key.
 
-</details>
+
 
 **Q2. How does Python's `for` loop actually work? What protocol does an object need to implement to be iterable?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 When Python encounters `for x in obj`, it calls `iter(obj)`, which invokes `obj.__iter__()` and expects an **iterator** in return. An iterator is any object with a `__next__()` method that returns the next value or raises `StopIteration` when exhausted. Lists, tuples, dicts, sets, strings, and files all implement `__iter__`. You can make your own class iterable by defining `__iter__` and `__next__`. Generator functions (using `yield`) produce iterators automatically without writing those dunder methods.
 
-</details>
+
 
 **Q3. What is the difference between a shallow copy and a deep copy for a list of dicts? When does each matter?**
-
-<details>
-<summary>Show answer</summary>
 
 `list.copy()`, `list(original)`, and `original[:]` all produce a **shallow copy**: a new list object, but each element is still the same object reference. If the elements are mutable (e.g., dicts), modifying an element in the copy also modifies the original.
 
@@ -721,12 +1080,9 @@ deep[0]["x"] = 42             # original is unaffected
 
 Use `copy.deepcopy()` when the collection contains nested mutable objects and you need full independence. It is slower and rarely necessary for flat structures.
 
-</details>
+
 
 **Q4. Explain Python's LEGB scope resolution rule with an example.**
-
-<details>
-<summary>Show answer</summary>
 
 When Python looks up a variable name it searches four scopes in order — **L**ocal → **E**nclosing → **G**lobal → **B**uilt-in:
 
@@ -752,12 +1108,9 @@ outer()   # prints "enclosing"
 
 The `global` keyword forces a name to bind at the global scope; `nonlocal` forces it to bind at the nearest enclosing scope.
 
-</details>
+
 
 **Q5. Why are dict comprehensions generally preferred over building a dict with a loop and repeated `.update()` or `[]` assignment calls?**
-
-<details>
-<summary>Show answer</summary>
 
 Three reasons:
 
@@ -767,12 +1120,10 @@ Three reasons:
 
 The exception: if the construction logic has side-effects, branches, or is complex enough to be confusing in one line, a plain loop is clearer and should be preferred.
 
-</details>
+
 
 **Q6. What does `*args` actually pass when you call a function? How would you "unpack" an existing list into positional arguments?**
 
-<details>
-<summary>Show answer</summary>
 
 Inside the function `*args` is a plain `tuple` containing the extra positional arguments in the order they were passed. No magic object — just a tuple.
 
@@ -789,12 +1140,9 @@ print(result)           # 6
 
 Similarly, `**mapping` at the call site unpacks a dict into keyword arguments.
 
-</details>
+
 
 **Q7. When should you raise a custom exception class instead of using a built-in one like `ValueError`?**
-
-<details>
-<summary>Show answer</summary>
 
 Use custom exceptions when:
 
@@ -804,7 +1152,7 @@ Use custom exceptions when:
 
 For small scripts and internal utilities, built-in exceptions are usually sufficient and clearer. Start with built-ins; promote to custom exceptions when callers need finer-grained handling.
 
-</details>
+
 
 ---
 
