@@ -109,7 +109,6 @@ address.reverse()
 #### 2.1.1 Tuple ( )
 
 ```python
-
 # Slicing works with tuple
 numbers = (4, 3, 1, 2, 0)
 
@@ -121,12 +120,9 @@ print(numbers[:3]) # (4, 3, 1)
 
 # start : 2, End : len(numbers)
 print(numbers[2:]) # (1, 2, 0)
-
 ```
 
-
 ```python
-
 # Tuple — immutable, ordered
 point = (3.0, 7.5)              # x, y coordinates
 x, y = point                    # unpacking

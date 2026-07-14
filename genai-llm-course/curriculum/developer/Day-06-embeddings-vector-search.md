@@ -22,26 +22,61 @@ By the end of Day 6 you will be able to:
 ### 2.1 Keyword Search vs. Semantic Search
 
 ##### 2.1.0 Keyword (lexical) search
-Systems like Elasticsearch or `LIKE` query in SQL — Find documents containing the same words that the user searched for. It does not works on meaning. They fail when a document uses synonyms or paraphrases the concept differently. They are fast, interpretable, and great when users know the precise vocabulary. 
 
-Keyword (lexical) search uses inverted Index to find out the document very fast. We will learn about it later, 
+>Systems like Elasticsearch or `LIKE` query in SQL — Find documents containing the same words that the user searched for. It does not works on meaning. They fail when a document uses synonyms or paraphrases the concept differently. They are fast, interpretable, and great when users know the precise vocabulary. 
+>Keyword (lexical) search uses inverted Index to avoid scanning every document. We will learn about it later.
+
+```
+Question
+	↓
+Compare Words
+	↓
+Return Matches
+```
 
 ##### 2.1.1 Semantic search 
-It works on meaning. A query like *"What is the parental leave policy?"* can match a document that says *"secondary caregiver leave is 6 weeks paid"* even with zero shared words, because both are encoded as nearby vectors in embedding space.
+>The word Semantic means " Related to meaning."
+>
+>Semantic search is  technique that retrieves documents based on **meaning** rather than exact keyword matches.
+>
+>For example a query like *"What is the parental leave policy?"* can match a document that says *"secondary caregiver leave is 6 weeks paid"* even with zero shared words, because both are encoded as nearby vectors in embedding space.
+
+
+```
+Question
+	↓
+Understand Meaning
+	↓
+Compare Meaning
+	↓
+Return Matches
+```
+
 
 ##### 2.1.2 The tradeoff: 
 Keyword search is deterministic and explainable; 
 semantic search handles vocabulary mismatch but can surface plausible-sounding but wrong matches. 
 
-Production systems often combine both — a technique called **hybrid search**.
+Semantic Search does not Replace Keyword Search. They solve different problems. Production systems often combine both — a technique called **hybrid search**.
 
 ---
-
 ### 2.2 Embedding Models
 
-An **embedding model** is a neural network that maps a piece of text to a fixed-length vector (a list of floating-point numbers) such that semantically similar texts are close together in that space.
+Embedding Models creates embeddings.
 
-#### Local models — `sentence-transformers`
+An **embedding model** is a neural network that maps a piece of text to a fixed-length vector (a list of floating-point numbers) that capture semantic meaning.
+
+Every embedding model produces vectors of a certain length.
+
+```
+Input Text ("Dog")
+	↓
+Embedding Model
+	↓
+Output Vector "[0.21, -0.63, 0.74, 0.91,...]"
+```
+
+#### 2.2.0 Local models — `sentence-transformers`
 
 The `sentence-transformers` library (built on Hugging Face Transformers) lets you run embedding models entirely on your machine. The most common general-purpose model is:
 
@@ -57,48 +92,243 @@ The `sentence-transformers` library (built on Hugging Face Transformers) lets yo
 - Low latency for batch ingestion of thousands of documents.
 - Good enough for most internal knowledge-base tasks.
 
-#### API-hosted embeddings
+Example of 
 
-Cloud providers (Anthropic via third-party partners, OpenAI `text-embedding-3-small/large`, Cohere `embed-v3`) offer higher-dimensional, more capable models (up to 3072 dimensions) but require network round-trips and charge per token.
+```python
+from sentence_transformers import SentenceTransformer
+
+model = SentenceTransformer(
+    "all-MiniLM-L6-v2"
+)
+
+vector = model.encode(
+    "Vacation Policy"
+)
+```
+
+#### 2.2.1  API-hosted embeddings
+
+Cloud providers like 
+- Anthropic via third-party partners, 
+- OpenAI `text-embedding-3-small/large`, Cohere `embed-v3`,
+offer higher-dimensional, more capable models (up to 3072 dimensions) but require network round-trips and charge per token.
 
 **When to use API embeddings:**
+- Usually Better models than local models, no hardware required
 - You need state-of-the-art quality and can tolerate cost/latency.
 - You are already calling the API for other tasks.
 - You need multi-modal embeddings (text + image).
 
 **Dimensions matter:** Higher dimensions capture richer meaning but cost more memory and compute. A 1536-dim vector takes 4× the storage of a 384-dim vector. Unless you have evidence of quality gains, start with a smaller local model.
 
----
+#### 2.2.2 Embedding Dimension
 
+Every embedding model produces vectors of a certain length. This is called Embedding Dimension. 
+
+For Example 
+
+```
+Model A → 384 numbers
+Model A → 768 numbers
+Model A → 1536 numbers
+Model A → 3072 numbers
+```
+
+More Dimensions does not automatically means it is better. Sometimes a 384-dimensional model performs almost as well as a 1536-dimensional one for a specific task. Choosing a model is a trade-off.
+
+Higher dimensions often mean:
+- More memory usage
+- Slower search
+- Larger vector databases
+
+
+---
 ### 2.3 Vector Databases
 
-A vector database stores embedding vectors alongside metadata and provides an **approximate nearest-neighbor (ANN)** index so you can find the top-k most similar vectors to a query vector very quickly — without scanning every document.
+#### 2.3.0 Introduction to Vector Databases
 
-#### Chroma
+From the previous topics, we learned that an Embedding Model converts text into embedding vectors.
+Now the next question is: 
 
+>Where do we store millions of these vectors, and how do we search them efficiently?
+
+That's where a **Vector Database** comes in. A **Vector Database** is a specialized database designed to **store embedding vectors** and **perform similarity search efficiently at scale**. Unlike a traditional database, which searches using exact values (IDs, names, keywords, etc.), a vector database searches using **vector similarity**.
+
+Its primary responsibilities are:
+- Store embedding vectors.
+- Store associated metadata (document ID, title, department, language, etc.).
+- provides an **approximate nearest-neighbor (ANN)** index so you can find the top-k most similar vectors to a query vector very quickly — without scanning every document.
+- Perform similarity search efficiently without comparing the query against every stored vector.
+
+
+**What Does a Vector Database Store?**
+
+A vector database stores much more than just embedding vectors. Suppose you insert : "Vacation Policy". 
+For each document, it typically stores: 
+
+```
+ID : 101
+
+Text :
+Vacation Policy
+
+Embedding :
+[0.21,-0.42,0.88,...]
+
+Metadata :
+Department = HR
+Language = English
+
+```
+
+The metadata allows you to filter search results. For example:
+  
+- Only HR documents
+- Only English documents
+- Only documents created after 2024
+
+before or after performing semantic search.
+
+---
+
+#### 2.3.1 Popular Vector Databases
+##### 2.3.1.0 Chroma
+
+- Chroma is one of the easiest vector databases to learn and is commonly used in tutorials, personal projects, and small RAG applications.
 - Embedded (runs in-process) or client-server mode.
 - Persists to disk with a single path argument.
 - Native Python API; great for prototyping and small-to-medium corpora (<10 M vectors).
 - Supports metadata filtering, hybrid queries.
 
-#### FAISS (Facebook AI Similarity Search)
+---
+##### 2.3.1.1 FAISS (Facebook AI Similarity Search)
 
-- Library (not a full database) written in C++ with Python bindings.
-- Extremely fast; runs entirely in memory by default.
+- FAISS is an open-source similarity search library developed by Meta.
+- Unlike Chroma, FAISS is like a Library, not a full database.
+- It stores vectors in memory or on disk  by default, and focuses only on storing vectors and performing extremely fast similarity search.
+- It is written in C++ with Python bindings.
 - Needs custom serialization (`faiss.write_index`) for persistence.
 - No built-in metadata filtering — you manage a parallel document store yourself.
 - Best for: pure similarity search at scale when you control the full stack.
-
-#### pgvector
-
-- PostgreSQL extension; adds a `vector` column type and ANN operators.
-- Lets you filter, join, and sort using full SQL alongside semantic search.
-- Excellent for production when you already operate Postgres and need metadata-rich queries.
-- Requires a running Postgres instance.
+- Disadvantages : Doesn't provide database features like authentication, REST APIs, replication, etc.
 
 ---
+##### 2.3.1.2 pgvector
 
-### 2.4 Similarity Metrics
+- If you are already using PostgreSQL, you can install the **pgvector extension**, instead of adding another vector database. 
+- pgvector adds support for storing embedding vectors directly inside PostgreSQL.
+- It adds a `vector` column type and ANN operators.
+- This allows you to combine traditional SQL queries (filter, join, and sort) with semantic search.
+- 
+**Features**
+- Adds a native `vector` column type
+- Supports similarity search
+- Supports ANN indexes
+- Combines SQL filtering with vector search
+- Stores metadata and embeddings in one database
+
+**Best for**
+- Applications already using PostgreSQL
+- Enterprise systems
+- Production RAG applications
+
+---
+#### 2.3.1 **Mental model :**
+
+```
+User Query (Text)
+   ↓
+Embedding Model
+   ↓
+Embedding Vector
+   ↓
+Vector Database
+   ↓
+ANN Index
+   ↓
+Top K Similar Vectors
+   ↓
+Relevant Documents
+   ↓
+  LLM
+   ↓
+Answer
+```
+
+---
+**Why do we need a Vector Database?**
+
+Suppose your company has **10 million documents**. Each document is converted into an embedding vector.
+
+When a user asks: "Can I take vacation next month?"
+
+The embedding model converts the query into another embedding vector. A naive approach would compare this query vector against all 10 million stored vectors using Cosine Similarity.
+
+
+```
+Query Vector
+   ↓
+Compare with Doc 1
+Compare with Doc 2
+Compare with Doc 3
+...
+Compare with Doc 10,000,000
+
+```
+
+Although Cosine Similarity is fast, performing millions of comparisons for every search is expensive.
+A Vector Database solves this problem by using an **Approximate Nearest Neighbor (ANN) Index**.
+
+Instead of comparing the query against every vector, the ANN index quickly narrows the search to the most promising candidates and returns the **Top-K most similar vectors**.
+
+This makes semantic search extremely fast even when working with millions of embeddings.
+**Why do we need a Vector Database?**
+
+Suppose your company has **10 million documents**. Each document is converted into an embedding vector.
+
+When a user asks: "Can I take vacation next month?"
+
+The embedding model converts the query into another embedding vector. A naive approach would compare this query vector against all 10 million stored vectors using Cosine Similarity.
+
+
+```
+Query Vector
+   ↓
+Compare with Doc 1
+Compare with Doc 2
+Compare with Doc 3
+...
+Compare with Doc 10,000,000
+
+```
+
+Although Cosine Similarity is fast, performing millions of comparisons for every search is expensive.
+A Vector Database solves this problem by using an **Approximate Nearest Neighbor (ANN) Index**.
+
+Instead of comparing the query against every vector, the ANN index quickly narrows the search to the most promising candidates and returns the **Top-K most similar vectors**.
+
+This makes semantic search extremely fast even when working with millions of embeddings.
+
+---
+### 2.4 Approximate Nearest Neighbor (ANN)
+
+  
+An **ANN Index** is a specialized indexing technique used by vector databases to perform fast similarity search.
+
+Instead of comparing the query vector against every stored vector, the ANN index quickly identifies the most promising candidate vectors and then returns the **Top-K nearest vectors**.
+
+Think of it like Google Maps.
+
+If you search for : Nearest Coffee Shop
+
+Google Maps does **not** calculate the distance to every coffee shop in the country.
+
+Instead, it quickly searches nearby locations using optimized data structures and returns the closest results.
+
+Vector databases work in a very similar way.
+
+---
+### 2.5 Similarity Metrics
 
 Given two vectors **a** and **b**:
 
@@ -113,30 +343,84 @@ Given two vectors **a** and **b**:
 For typical NLP embedding search, **cosine similarity** is the standard default because it ignores vector magnitude (which can vary with document length or embedding norm) and focuses on direction (meaning).
 
 ---
-
 ### 2.5 Approximate Nearest Neighbor (ANN) — HNSW and IVF
+#### **Brute-force / Exact nearest-neighbor search** 
 
-Brute-force nearest-neighbor search requires comparing the query vector against every stored vector — O(n·d) operations. With millions of documents and 768-dim vectors this is too slow.
+It requires comparing the query vector against every stored vector — O(n·d) operations. 
+
+Suppose you have 10 Million Documents, Each document has an embedding vector.
+
+User asks : Vacation Policy
+
+Embedding model converts it into : Query Vector
+Now imagine doing
+
+
+```
+Query Vector
+   ↓
+Compare with Doc 1
+Compare with Doc 2
+Compare with Doc 3
+...
+Compare with Doc 10,000,000
+```
+
+
+With millions of documents and 768-dim vectors this is too slow.
 
 **ANN algorithms** trade a small amount of recall for massive speed gains.
 
-#### HNSW (Hierarchical Navigable Small World)
+#### There are many ANN algorithms, but we will discuss the two most famous algorithms
+1. HNSW (Hierarchical Navigable Small World)
+2. IVF (Inverted File Index) 
 
-Builds a multi-layer proximity graph during indexing. Each node connects to its nearest neighbours; upper layers are sparse (fast navigation), lower layers are dense (fine-grained search).
+##### 1. HNSW (Hierarchical Navigable Small World)
 
-- **Search:** Start at top layer, greedily walk to nodes closer to the query, descend layers until the bottom.
+Builds a multi-layer proximity graph during indexing. Each node connects to its nearest neighbours; 
+
+upper layers are sparse (fast navigation), 
+lower layers are dense (fine-grained search).
+
+- **Search:** Start at top layer -> Middle layer ->Bottom layer greedily walk to nodes closer to the query, descend layers until the bottom.
 - **Speed:** Sub-millisecond queries even at millions of vectors.
 - **Recall:** Typically 95–99 % at good parameter settings (`ef_construction`, `M`).
-- **Downside:** Index lives in RAM; can be memory-intensive for very large corpora.
+- **Downside:** In HNSW index lives in RAM so it use lots of RAM. Every vector stores links to its neighbours (relationships.). Millions of vectors stores Millions of neighbour links. That's why memory usage becomes high.
 
-#### IVF (Inverted File Index) + PQ (Product Quantization)
+#### 2. IVF (Inverted File Index) + PQ (Product Quantization)
+
+Instead of searching in one giant collection, it divides vectors into groups.
 
 Divides the embedding space into `n_lists` clusters (via k-means). At query time, only the nearest `n_probe` cluster centroids are searched.
+
+##### What is `n_lists`?
+
+Suppose we have 10 Million Vectors. You divide them into 100 Clusters
+Then n_lists = 100
+More clusters == Smaller groups.
+
+##### What is `n_probe`?
+
+Suppose query looks like HR.
+
+Should we search Only HR?
+
+
+Maybe. But what if the query is near the border? It might also belong to Finance. So instead of searching in 1 Cluster Search in 3 Clusters. 
+That's n_probe = 3
+
+
+Larger n_probe == Better accuracy == More work.
 
 - **Speed:** Fast when `n_probe` is small.
 - **Recall:** Lower recall if the query falls near a cluster boundary.
 - **Downside:** Requires a training step (clustering) before indexing.
 - **IVF + PQ** compresses vectors further (4–32× smaller), enabling billion-scale search on commodity hardware.
+
+##### Product Quantization (PQ)
+This is an optimization on top of IVF. Instead of storing 1536 floating-point numbers for every vector, PQ it compresses them into a Much smaller size. Now instead of storing 100 GB Maybe 20 GB Much cheaper.
+
+That's why IVF + PQ is popular for billions of vectors.
 
 #### Speed / Recall Tradeoff
 
@@ -146,6 +430,19 @@ Every ANN algorithm has parameters that let you slide along the speed-recall cur
 High recall  ←────────────────────→  High speed
  (brute-force)                         (fewer probes/hops)
 ```
+
+##### Recall
+
+Recall means how often did we find the true nearest neighbors? Suppose the perfect algorithm finds 10 correct documents and Your ANN algorithm finds 9 Recall. Its 90% accurate.  
+Higher recall == More accurate.
+
+##### Speed
+Speed means how quickly did we return the results? It is usually measured in Milliseconds.
+
+The Tradeoff is we usually can't maximize both. 
+High Recall == Search more vectors == Slower.
+High Speed == Search fewer vectors == Might miss a few results.
+
 
 For a production knowledge base, recall@10 ≥ 95 % at < 10 ms latency per query is a typical starting target.
 

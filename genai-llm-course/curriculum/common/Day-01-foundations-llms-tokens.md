@@ -204,9 +204,6 @@ Tokenisation is Useful, Suppose the model has never seen as particular word befo
 BPE builds its set of puzzle pieces (the *vocabulary*) by scanning huge amounts of text and repeatedly merging whichever pair of adjacent pieces appears most often, starting from individual characters:
 
 
-
-
-
 ```
 Step (characters):         h e l l o   w o r l d
 merge most frequent pair : h e ll o   w o r l d  ("l"+"l" -> "ll")
@@ -292,9 +289,6 @@ Embeddings → Vectors → Cosine Similarity → How similar are these vectors? 
 LLM-derived embeddings place semantically similar text close together in vector space.
 
 Let's simplify that. Imagine we have the below sentences, and the converted to numbers, because computers compare numbers much more easily than sentences. 
-
-
-
 
 ```
 "The cat sat on the mat"   →  [0.12, -0.34, 0.88, ..., 0.05]   (384 floats)
