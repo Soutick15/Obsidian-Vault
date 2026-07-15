@@ -117,7 +117,7 @@ response = requests.get
 	},
     timeout = 10,                # seconds — always set this
 )
-response.raise_for_status()# checks Status Code raises HTTPError for 4xx/5xx
+response.raise_for_status()  # checks Status Code raises HTTPError for 4xx/5xx
 data = response.json()         # parse body as JSON → dict
 print(data["url"])
 ```

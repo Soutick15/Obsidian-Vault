@@ -260,10 +260,9 @@ Answer
 
 Suppose your company has **10 million documents**. Each document is converted into an embedding vector.
 
-When a user asks: "Can I take vacation next month?"
+When a user asks : "Can I take vacation next month?"
 
 The embedding model converts the query into another embedding vector. A naive approach would compare this query vector against all 10 million stored vectors using Cosine Similarity.
-
 
 ```
 Query Vector
@@ -277,32 +276,7 @@ Compare with Doc 10,000,000
 ```
 
 Although Cosine Similarity is fast, performing millions of comparisons for every search is expensive.
-A Vector Database solves this problem by using an **Approximate Nearest Neighbor (ANN) Index**.
 
-Instead of comparing the query against every vector, the ANN index quickly narrows the search to the most promising candidates and returns the **Top-K most similar vectors**.
-
-This makes semantic search extremely fast even when working with millions of embeddings.
-**Why do we need a Vector Database?**
-
-Suppose your company has **10 million documents**. Each document is converted into an embedding vector.
-
-When a user asks: "Can I take vacation next month?"
-
-The embedding model converts the query into another embedding vector. A naive approach would compare this query vector against all 10 million stored vectors using Cosine Similarity.
-
-
-```
-Query Vector
-   ↓
-Compare with Doc 1
-Compare with Doc 2
-Compare with Doc 3
-...
-Compare with Doc 10,000,000
-
-```
-
-Although Cosine Similarity is fast, performing millions of comparisons for every search is expensive.
 A Vector Database solves this problem by using an **Approximate Nearest Neighbor (ANN) Index**.
 
 Instead of comparing the query against every vector, the ANN index quickly narrows the search to the most promising candidates and returns the **Top-K most similar vectors**.
@@ -313,17 +287,12 @@ This makes semantic search extremely fast even when working with millions of emb
 ### 2.4 Approximate Nearest Neighbor (ANN)
 
   
-An **ANN Index** is a specialized indexing technique used by vector databases to perform fast similarity search.
+>An **ANN Index** is a specialized indexing technique used by vector databases to perform fast similarity search.
+>
+>Instead of comparing the query vector against every stored vector, the ANN index quickly identifies the most promising candidate vectors and then returns the **Top-K nearest vectors**.
 
-Instead of comparing the query vector against every stored vector, the ANN index quickly identifies the most promising candidate vectors and then returns the **Top-K nearest vectors**.
-
-Think of it like Google Maps.
-
-If you search for : Nearest Coffee Shop
-
-Google Maps does **not** calculate the distance to every coffee shop in the country.
-
-Instead, it quickly searches nearby locations using optimized data structures and returns the closest results.
+Analogy :
+Think of it like Google Maps. If you search for : Nearest Coffee Shop. Google Maps does **not** calculate the distance to every coffee shop in the country. Instead, it quickly searches nearby locations using optimized data structures and returns the closest results.
 
 Vector databases work in a very similar way.
 

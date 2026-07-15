@@ -412,18 +412,25 @@ scores = {
 	"Bob": 82, 
 	"Carol": 91
 	}
+	
+```
 
+```python
 for name, score in scores.items():
-    print(f"{name}: {score}")
+	print(name, score)         # Alice: 95 Bob: 82 Carol: 91
 ```
 
-```
-Alice: 95
-Bob: 82
-Carol: 91
+```python
+for name, score in scores.items():
+	print(score, name)          # 95 Alice 82 Bob 91 Carol
 ```
 
----
+
+```python
+for m in scores.items():
+	print(m)	        # ('Alice', 95) ('Bob', 82) ('Carol', 91)
+```
+
 
 ```python
 # dict.keys() and dict.values()
@@ -438,7 +445,7 @@ print(list(scores.values()))  # [95, 82, 91]
 Comprehensions are concise, readable alternatives to `for` loops that build new collections.
 
 
-#### 2.5.1 **List comprehension — squares of even numbers**
+#### 2.5.1 **List comprehension**
 
 **Syntax pattern :**  Build List
 
@@ -456,6 +463,8 @@ Comprehensions are concise, readable alternatives to `for` loops that build new 
 
 ```
 
+squares of even numbers from a list.
+
 ```python
 numbers = [1, 2, 3, 4, 5, 6, 7, 8]
 
@@ -467,6 +476,19 @@ even_squares = [
 	
 print(even_squares)   # [4, 16, 36, 64]
 
+```
+Use  **list comprehension** to extract all numbers greater than 5, but replace any odd number in that range with the string `"Odd"`.
+
+```python
+numbers = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
+
+filtered_mixed = [
+	x if x % 2 == 0 else "Odd"
+	for x in numbers
+	if x > 5
+	]
+
+print(filtered_mixed) # ['Odd', 6, 'Odd', 8, 'Odd', 10]
 ```
 
 ---
@@ -706,7 +728,7 @@ students = [
 ]
 
 def get_marks(student):
-return student[1]
+	return student[1]
 
 
 students.sort(key=get_marks)
@@ -744,7 +766,7 @@ print(words)   # ['fig', 'apple', 'banana', 'cherry']
 def by_length(w):
     return len(w)
 
-words.sort(key=by_length)
+words.sort(key = by_length)
 ```
 
 ---
@@ -841,7 +863,6 @@ Python signals errors by **raising exceptions**. Use `try / except` to handle th
 #### Basic `try` / `except`
 
 - Use the `try` block to write **code that may raise an exception**.
-
 - Use `except` to handle the exception. It is similar to `catch` block in Java.
 
 
@@ -877,7 +898,7 @@ It is used for  It is typically used for
 
 Instead of mixing risky code + non-risky code inside  `try`, Python encourages separating them.
 
-notice in this example, only the line `result = a / b` is a risky code and may raise a `ZeroDivisionError`. other lines of code are not risky. 
+notice in the above example, only the line `result = a / b` is a risky code and may raise a `ZeroDivisionError`. other lines of code are not risky. 
 
 So we can separate them in the else block.
 

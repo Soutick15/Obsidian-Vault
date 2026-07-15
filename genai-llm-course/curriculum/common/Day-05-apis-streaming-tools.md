@@ -119,7 +119,12 @@ Because nothing is remembered between calls, *your application* is responsible f
 history = []
 
 def chat(user_input: str, system: str = "") -> str:
-    history.append({"role": "user", "content": user_input})
+    history.append(
+	    {
+		    "role": "user",
+		    "content": user_input
+		}
+	)
     response = client.messages.create(
         model="claude-haiku-4-5",
         max_tokens=512,
@@ -127,7 +132,12 @@ def chat(user_input: str, system: str = "") -> str:
         messages=history,
     )
     assistant_text = response.content[0].text
-    history.append({"role": "assistant", "content": assistant_text})
+    history.append(
+	    {
+		    "role": "assistant",
+			"content": assistant_text
+		}
+	)
     return assistant_text
 ```
 

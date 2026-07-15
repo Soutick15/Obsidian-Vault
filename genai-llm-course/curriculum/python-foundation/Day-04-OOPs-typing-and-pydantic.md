@@ -24,15 +24,15 @@ By the end of Day 4 you will be able to:
 
 ### 2.1 Classes — the basics
 
-A **class** is a blueprint. 
-An **object** is an instance built from that blueprint class. 
+A **class** is a blueprint to create objects. 
+An **object** is an instance built from that blueprint (class). 
 A class have attributes (variable ) and behaviours (Methods)
 
 ```python
 class Employee:
 	company : str = "Inspiron"
 	
-	# __init__ is used for constructor
+	# __init__ is used to declate constructor
 	def __init__(self, name: str, age: int, salary: float, courses: list) -> None :
 	self.name = name
 	self.age = age
@@ -203,6 +203,7 @@ print(emp.calculate_bonus()). # 5000
 #### 2.3.2 Inheritance  
 
 ```python
+# Parent class / Base class
 class Employee:
 
     company = "Inspiron"
@@ -220,6 +221,7 @@ class Employee:
 ```
 
 ```python
+# child class
 class Manager(Employee):
 
     def __init__(self, name: str, dept: str, salary: int, reports: int) -> None:
@@ -230,8 +232,6 @@ class Manager(Employee):
 	def work(self):
 		print(f"Manager {self.name} is working")
 
-
-        
 ```
 
 ```python
@@ -246,7 +246,7 @@ print(manager.annual_cost())       # 1200006.48
 ```
 
 ---
-with `@dataclass`  we can remove the ` super().__init__()` constructor. Python will automatically call ` super().__init__()` internally. 
+With `@dataclass` we can remove the `super().__init__()` constructor from child class. Python will automatically call  parent class constructor `super().__init__()` internally. 
 
 ```python
 from dataclasses import dataclass
@@ -276,7 +276,7 @@ class Manager(Employee):
 ```
 
 
-**When to inherit:** when the child *is a* specialisation of the parent and needs its interface. Prefer composition (holding an object) over inheritance when you just need to *use* a class.
+**When to inherit:** when the child is a specialisation of the parent and needs its interface. Prefer composition (holding an object) over inheritance when you just need to *use* a class.
 
 
 #### 2.3.3 Polymorphism
@@ -328,70 +328,302 @@ def find_user_v2(uid: int) -> str | None:
     ...
 ```
 
-**Why they matter for AI work:** LLM output parsers, prompt builders, and tool-use schemas all rely on type information to generate and validate structured data.
+**Why they matter for AI work :** LLM output parsers, prompt builders, and tool-use schemas all rely on type information to generate and validate structured data.
 
-### 2.5 Pydantic v2 — validated data models
 
-Pydantic is the most widely used data validation library in Python. It is the backbone of structured LLM output in frameworks like LangChain, LlamaIndex, and the Anthropic Python SDK's tool-use helpers.
+---
+
+### 2.5 Pydantic v2 — Data Validation & Parsing
+
+#### 2.5.0 Interview Definition
+Pydantic is one of the most popular Python libraries for **data validation, parsing, and serialization**. It uses Python **type hints** to automatically validate incoming data, perform safe type conversion, and create strongly-typed Python objects. It is widely used in FastAPI and modern AI frameworks for validating API requests, responses, and structured LLM outputs.
+
+Think of it as the Python equivalent of:
+
+- **DTOs (Data Transfer Objects)** in Spring Boot
+- **Jackson** (JSON ↔ Object conversion)
+- **Bean Validation** (`@NotNull`, `@Min`, `@Email`, etc.)
+
+Pydantic is heavily used in:
+
+- FastAPI
+- LangChain
+- LlamaIndex
+- PydanticAI
+- OpenAI & Anthropic integrations
+- Structured LLM Outputs
+
+---
+#### 2.5.1 Why use Pydantic?
+
+Without Pydantic, API or LLM responses are usually plain Python dictionaries.
+
+```python
+data = {
+    "name": "Priya",
+    "salary": 80000
+}
+```
+
+You would need to manually:
+
+- Check whether required fields exist.
+- Validate data types.
+- Validate business rules.
+- Convert JSON into Python objects.
+
+Pydantic automates all of this.
+
+```
+Incoming JSON / Dictionary
+            │
+            ▼
+      Pydantic Model
+            │
+ ┌──────────┼──────────┐
+ │          │          │
+ ▼          ▼          ▼
+Validation  Type Conversion  Python Object
+```
+
+---
+
+#### 2.5.2 Creating a Pydantic Model
 
 ```python
 import re
 from pydantic import BaseModel, field_validator, ValidationError
 
+# Simple regex used to validate email format
 _EMAIL_RE = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
+
+# BaseModel provides:
+# • Automatic __init__()
+# • Validation
+# • Type conversion
+# • Serialization methods
 class Employee(BaseModel):
+
+    # Fields are declared using type hints.
+    # No need to write an __init__() constructor.
     name: str
     dept: str
     salary: int
     email: str
 
+    # Runs automatically whenever "salary" is provided.
     @field_validator("salary")
     @classmethod
-    def salary_positive(cls, v: int) -> int:
-        if v <= 0:
-            raise ValueError("salary must be > 0")
-        return v
+    def salary_positive(cls, value: int) -> int:
 
+        if value <= 0:
+            raise ValueError("Salary must be greater than 0.")
+
+        return value
+
+    # Runs automatically whenever "email" is provided.
     @field_validator("email")
     @classmethod
-    def email_valid(cls, v: str) -> str:
-        if not _EMAIL_RE.match(v):
-            raise ValueError("value is not a valid email address")
-        return v
+    def email_valid(cls, value: str) -> str:
 
-# Parse a dict into the model
-data = {"name": "Priya", "dept": "Engineering", "salary": 80_000, "email": "priya@co.com"}
-emp = Employee(**data)          # or Employee.model_validate(data)
-print(emp.name)                 # Priya
-print(emp.model_dump())         # {'name': 'Priya', 'dept': 'Engineering', ...}
+        if not _EMAIL_RE.match(value):
+            raise ValueError("Invalid email address.")
 
-# ValidationError when data is wrong
-bad = {"name": "X", "dept": "HR", "salary": -500, "email": "not-an-email"}
-try:
-    Employee(**bad)
-except ValidationError as e:
-    print(e)   # lists every field error with location + message
+        return value
 ```
 
-Key Pydantic v2 facts:
-- Fields are declared as class-level annotations (no `__init__` needed).
-- Validation runs automatically on construction.
-- `model_dump()` returns a plain `dict` (was `.dict()` in v1).
-- `model_dump(mode="json")` serialises to JSON-compatible types.
-- `model_validate(dict)` is the explicit way to parse from a dict.
+---
 
+#### 2.5.3 Creating an Object
+
+```python
+data = {
+    "name": "Priya",
+    "dept": "Engineering",
+    "salary": 80000,
+    "email": "priya@co.com"
+}
+
+# Method 1 (most common)
+employee = Employee(**data)
+
+# Method 2 (explicit validation)
+employee = Employee.model_validate(data)
+```
+
+Both approaches produce exactly the same object.
+
+```python
+print(employee)
+```
+
+Output
+
+```text
+Employee(
+    name='Priya',
+    dept='Engineering',
+    salary=80000,
+    email='priya@co.com'
+)
+```
+
+---
+#### 2.5.4 Accessing Fields
+
+Instead of using dictionary syntax
+
+```python
+print(data["name"])
+```
+
+you can access fields like a normal object.
+
+```python
+print(employee.name)
+print(employee.salary)
+```
+
+Output
+
+```text
+Priya
+80000
+```
+
+---
+
+### Converting Back to a Dictionary
+
+Pydantic objects can easily be converted back into a normal Python dictionary.
+
+```python
+employee.model_dump()
+```
+
+Output
+
+```python
+{
+    'name': 'Priya',
+    'dept': 'Engineering',
+    'salary': 80000,
+    'email': 'priya@co.com'
+}
+```
+
+This is useful before:
+
+- Returning API responses
+- Saving data
+- Sending JSON to another service
+
+---
+
+### Validation Example
+
+Suppose the incoming data is invalid.
+
+```python
+bad_data = {
+    "name": "Priya",
+    "dept": "Engineering",
+    "salary": -500,
+    "email": "not-an-email"
+}
+```
+
+Now create the object.
+
+```python
+try:
+    employee = Employee(**bad_data)
+
+except ValidationError as e:
+    print(e)
+```
+
+Output
+
+```text
+2 validation errors
+
+salary
+  Salary must be greater than 0.
+
+email
+  Invalid email address.
+```
+
+Notice that Pydantic reports **all validation errors**, not just the first one.
+
+---
+
+## BaseModel vs dataclass
+
+| dataclass | BaseModel |
+|------------|-----------|
+| Stores data | Stores + validates data |
+| No validation | Automatic validation |
+| No JSON parsing | JSON / dict parsing |
+| No serialization helpers | `model_dump()` |
+| Good for simple objects | Best for APIs and AI applications |
+
+---
+
+## Important Pydantic v2 Methods
+
+| Method | Purpose |
+|---------|----------|
+| `Employee(**data)` | Create a model from a dictionary |
+| `Employee.model_validate(data)` | Explicitly validate and create a model |
+| `model_dump()` | Convert model → Python dictionary |
+| `model_dump_json()` | Convert model → JSON string |
+
+---
+
+## Key Pydantic v2 Facts
+
+- Fields are declared using **type annotations**.
+- No need to manually write an `__init__()` constructor.
+- Validation runs automatically whenever a model is created.
+- `field_validator()` validates individual fields.
+- `ValidationError` contains all validation failures.
+- `model_dump()` replaces `.dict()` from Pydantic v1.
+- `model_validate()` replaces `.parse_obj()` from Pydantic v1.
+
+
+---
 ### 2.6 Context managers (`with`)
 
+A Context Manager is simply an object that automatically 
+- performs setup before entering a block and 
+- cleanup after leaving the block
+
 Context managers guarantee that setup and teardown code runs — even if an exception is raised.
+
+It called a Context Manager Because it manages the context inside the `with` block.
 
 ```python
 # Built-in example: file handles
 with open("notes.txt", "w") as fh:
-    fh.write("hello")
-# fh is closed automatically here
+    fh.write("hello").   # fh is closed automatically here
+```
 
-# Writing your own
+Everything inside the `with` has access to the resource. Everything outside doesn't.
+
+```python
+
+open("notes.txt","w")       # Creates a file object.
+with open("notes.txt", "w") # Open file, use, then close automatically.
+```
+
+
+#### Writing Your Own Context Manager
+
+```python
+
 import time
 
 class Timer:
@@ -413,7 +645,11 @@ with Timer() as t:
 
 ### 2.7 Decorators — a brief intro
 
-A decorator is a function that wraps another function to add behaviour.
+A Decorator is a function that wraps another function to add extra behaviour without modifying the original function. 
+
+It is commonly used for logging, timing, authentication, caching, validation, and registering routes.
+
+The `@decorator` syntax is simply syntactic sugar for`function = decorator(function)`.
 
 ```python
 import time
@@ -433,29 +669,61 @@ def slow():
     time.sleep(0.1)
     return "done"
 
-slow()   # slow took 0.1003s
+slow()                          # slow took 0.1003s
 ```
 
 The `@` line is pure syntactic sugar — nothing more.
 
+#### @functools.wraps(func)    
+
+It copies the wrapped function's `__name__`, `__doc__`, `__module__`, and `__qualname__` onto the `wrapper` function. Without it, every decorated function would appear to have the name `wrapper`, which breaks introspection, debugging, and tools that rely on `__name__`.
+
+---
 ### 2.8 `logging` vs `print`
 
 `print` is for user-facing output. `logging` is for diagnostic messages that can be turned on/off by level and redirected to files.
 
+#### Log Levels
+As you move down, the severity increases.
+
+| Python   | Meaning                                             |
+| -------- | --------------------------------------------------- |
+| DEBUG    | Detailed debugging information                      |
+| INFO     | Normal application events                           |
+| WARNING  | Something unexpected, but the application continues |
+| ERROR    | An operation failed                                 |
+| CRITICAL | Serious error, application may stop                 |
+
 ```python
-import logging
+import logging # This imports Python's built-in logging module.
 
 logging.basicConfig(
-    level=logging.DEBUG,
-    format="%(asctime)s %(levelname)s %(name)s — %(message)s",
+    level = logging.DEBUG,
+    format = "%(asctime)s %(levelname)s %(name)s — %(message)s",
 )
-logger = logging.getLogger(__name__)
+
+ # This creates a logger.
+logger = logging.getLogger(__name__)  
+
 
 logger.debug("entering parse_response()")
+# 2026-07-15 14:29:02,800 DEBUG __main__ — entering parse_response()
+
 logger.info("model returned %d tokens", 512)
+# 2026-07-15 14:29:02,800 INFO __main__ — model returned 512 tokens
+
 logger.warning("rate limit approaching")
+# 2026-07-15 14:29:02,800 WARNING __main__ — rate limit approaching
+
 logger.error("validation failed: %s", "missing field")
+# 2026-07-15 14:29:02,800 ERROR __main__ — validation failed: missing field
 ```
+
+`format` = This controls how logs look. Let's understand each placeholder.
+`%(asctime)s` = Prints the timestamp. Example - 2026-07-16 10:30:45
+`%(levelname)s` = It prints INFO or ERROR
+`%(name)s` = Prints the logger name. Example - employee_service, `__main__`
+`%(message)s` = Prints your actual message. Example - Employee created successfully.
 
 In production code (including AI pipelines), set the level to `WARNING` or higher so debug noise is silenced without removing the statements.
 
@@ -489,23 +757,7 @@ python curriculum/python-foundation/exercises/day-04/starter.py
 
 ## 4. Self-Check Quiz
 
-**Q1. What is the difference between a class attribute and an instance attribute?**
 
-<details>
-<summary>Show answer</summary>
-
-A class attribute is defined directly on the class body and is shared by every instance. An instance attribute is set via `self.attr = value` inside a method (typically `__init__`) and belongs only to that specific object. Assigning to `self.attr` on an instance hides the class attribute for that instance but leaves other instances unaffected.
-
-</details>
-
-**Q2. What does `@dataclass` auto-generate that saves you writing boilerplate?**
-
-<details>
-<summary>Show answer</summary>
-
-`@dataclass` generates `__init__` (accepting each annotated field as a parameter), `__repr__` (a readable string representation), and `__eq__` (equality by field values). Optional flags like `order=True` also generate comparison methods (`__lt__`, etc.) and `frozen=True` makes instances immutable.
-
-</details>
 
 **Q3. Do Python type hints affect runtime behaviour?**
 
@@ -656,8 +908,8 @@ Python loggers form a tree rooted at the root logger. A logger named `myapp.mode
 
 ## 6. Key Takeaways
 
-- **Classes** bundle data (attributes) and behaviour (methods). `self` gives each instance access to its own data; class attributes are shared.
-- **`@dataclass`** removes `__init__`/`__repr__`/`__eq__` boilerplate for plain data containers; use `field(default_factory=...)` for mutable defaults.
+
+
 - **Inheritance** is powerful but should be used sparingly — prefer "is-a" relationships, keep hierarchies shallow, and consider composition first.
 - **Type hints** cost nothing at runtime but pay dividends in IDE support, refactoring safety, and documentation. Use `X | None` (Python 3.10+) or `Optional[X]` for nullable values.
 - **Pydantic v2** provides fast, declarative data validation. `BaseModel` subclasses are the standard way to describe and validate structured data in modern Python AI code — LLM tool-use schemas, API response parsing, and config loading all use this pattern.

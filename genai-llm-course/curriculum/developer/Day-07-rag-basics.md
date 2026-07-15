@@ -22,6 +22,10 @@ By the end of Day 7 you will be able to:
 
 Large language models have a hard cutoff in their training data and zero access to private documents. Ask a model about Acme Corp's 2026 holiday calendar and it will either hallucinate confidently or refuse. This is not a model quality problem — it is a knowledge access problem.
 
+**RAG (Retrieval-Augmented Generation)** was introduced to solve one of the biggest limitations of Large Language Models: **they cannot reliably access or use your private, domain-specific, or up-to-date information.**
+
+Instead of relying only on what the model learned during training, RAG retrieves relevant information from an external knowledge source and provides it to the LLM before it generates an answer.
+
 **Retrieval-Augmented Generation (RAG)** solves it by injecting relevant, authoritative text into the context window at inference time. The model is not re-trained; it is given the right documents to reason over, just-in-time.
 
 Benefits of RAG:
@@ -95,15 +99,34 @@ The "right" granularity for a chunk is one that:
 #### Fixed-size / token-window
 Split every N tokens (or characters) regardless of sentence boundaries.
 
+```
+Chunk 1 → 500 tokens
+Chunk 2 → 500 tokens
+Chunk 3 → 500 tokens
+```
+
 - **Pro:** Simple, predictable chunk count, easy to size for context window limits
-- **Con:** Can cut sentences mid-thought; no semantic awareness
+- **Con:** Can cut sentences mid-thought; no semantic awareness. May split information in the middle of: a sentence, a paragraph, an important explanation
 - **When to use:** Uniform-density prose where sentence boundaries are not critical
 
 #### Fixed-size with overlap
 Same as above but adjacent chunks share M tokens of overlap (typically 10–20% of chunk size).
 
+```
+Chunk Size = 500 tokens
+
+Chunk 1
+
+1 → 500
+
+Chunk 2
+
+401 → 900  # Overlap = 100 tokens
+
+```
+
 - **Pro:** Ensures that sentences near a boundary appear in at least one full chunk
-- **Con:** Slight storage and compute overhead
+- **Con:** Slight storage and compute overhead. - More storage (duplicate content). Slightly slower indexing.
 - **When to use:** Most practical RAG systems; the overlap is almost always worth it
 
 #### Recursive / structural splitting
@@ -162,15 +185,15 @@ A RAG system must handle three failure modes gracefully:
 
 ### 2.7 RAG vs Fine-Tuning vs Long-Context
 
-| Dimension | RAG | Fine-Tuning | Long-Context |
-|---|---|---|---|
-| **Knowledge update** | Update the corpus | Retrain the model | Update the context window |
-| **Cost to update** | Low (re-index) | High (GPU + data) | Zero (just paste) |
-| **Max knowledge size** | Unlimited (indexed) | Baked into weights | Limited by context window |
-| **Latency** | +retrieval step (~100 ms) | Same as base | Scales with token count |
-| **Hallucination risk** | Low (grounded) | Medium (memorised) | Low (in-window) |
-| **Best for** | Large, frequently updated corpora | Style / task adaptation | Small, stable document sets |
-| **Interpretability** | High (citations) | Low | Medium |
+| Dimension              | RAG                               | Fine-Tuning             | Long-Context                |
+| ---------------------- | --------------------------------- | ----------------------- | --------------------------- |
+| **Knowledge update**   | Update the corpus                 | Retrain the model again | Update the context window   |
+| **Cost to update**     | Low (re-index)                    | High (GPU + data)       | Zero (just paste)           |
+| **Max knowledge size** | Unlimited (indexed)               | Baked into weights      | Limited by context window   |
+| **Latency**            | +retrieval step (~100 ms)         | Same as base            | Scales with token count     |
+| **Hallucination risk** | Low (grounded)                    | Medium (memorised)      | Low (in-window)             |
+| **Best for**           | Large, frequently updated corpora | Style / task adaptation | Small, stable document sets |
+| **Interpretability**   | High (citations)                  | Low                     | Medium                      |
 
 **Rule of thumb:** If your knowledge base is larger than fits in a context window, or changes more than monthly, use RAG. If you need to change the model's tone or task behaviour, fine-tune. If your whole corpus fits in a single context window and never changes, long-context may be simpler.
 

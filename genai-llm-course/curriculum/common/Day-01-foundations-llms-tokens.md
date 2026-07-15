@@ -72,13 +72,15 @@ Recap: AI is the broadest umbrella; every LLM is a GenAI model, every GenAI mode
 
 ---
 
-### 2.2 What an LLM Actually Is
+### 2.2 What an LLM Actually is
 
-An LLM is a probability distribution over the next token given all previous sequence of tokens so far. This process is repeated token-by-token until a stop condition.
+An LLM is a probability distribution over the next token given all previous sequence of tokens so far. It predicts the most likely next token based on the input and the knowledge it learned during training.
+
+This process is repeated token-by-token until a stop condition.
 
 An LLM is an AI model trained on massive amounts of text data. It learns patterns in language and can understand and generate human-like text. 
 
-Instead of looking up answers in a database, it predicts the most likely next token based on the input and the knowledge it learned during training. LLMs are used for tasks like question answering, code generation, summarization, translation, and conversational AI.
+Instead of looking up answers in a database,  LLMs are used for tasks like question answering, code generation, summarization, translation, and conversational AI.
 
 That sounds abstract, so here is the everyday version: it works like the autocomplete on your phone keyboard, which looks at the last few words you typed and suggests the most likely next word — except an LLM does this with a vastly larger vocabulary, a vastly longer memory of what came before, and a model trained on a huge slice of the internet instead of just your own texting history.
 At every step the model does:
@@ -91,20 +93,19 @@ P(next_token | token_1, token_2, ..., token_n)  →  sample one token  →  appe
 
 That's it. Everything else — answering questions, writing code, following instructions — is an emergent behaviour of training that distribution on enormous, diverse text.
 
-Given the sequence of tokens seen so far, the model outputs a probability distribution over every possible next token, then samples (or argmax-selects) one. 
+Recap: an LLM repeatedly predicts one next token at a time from everything typed so far, and that simple loop — run billions of times during training — is what produces language ability, reasoning-like behaviour, and also its failure modes (hallucination, non-determinism).
 
 #### What this implies for developers
 
-| Implication               | Why it matters                                                                                                                                                                     |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Non-determinism**       | Sampling means the same prompt can return different outputs. Use `temperature=0` for near-deterministic output; exact reproducibility is NOT guaranteed across providers/hardware. |
-| **No persistent memory**  | The model has no state between API calls. Everything it "knows" about your session must be in the current prompt.                                                                  |
-| **Can hallucinate**       | If the most probable next token continues a plausible but wrong sentence, the model does it. It has no external fact-checker.                                                      |
-| **Patterns, not logic**   | LLMs are very good at mimicking the *form* of reasoning they saw in training data. They are not running a symbolic solver.                                                         |
-| **Context is everything** | The model only sees what you put in the prompt. Richer context = better output.                                                                                                    |
+| Implication               | Why it matters                                                                                                                                                                                                                                     |
+| ------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Non-determinism**       | Sampling means the same prompt can return different outputs. Use `temperature=0` for near-deterministic output. Use `temperature=3` (or higher) for more creative answer<br><br>Exact reproducibility is NOT guaranteed across providers/hardware. |
+| **No persistent memory**  | The model has no state between API calls. Everything it "knows" about your session must be in the current prompt.                                                                                                                                  |
+| **Can hallucinate**       | If the most probable next token continues a plausible but wrong sentence, the model does it. It has no external fact-checker.                                                                                                                      |
+| **Patterns, not logic**   | LLMs are very good at mimicking the *form* of reasoning they saw in training data. They are not running a symbolic solver.                                                                                                                         |
+| **Context is everything** | The model only sees what you put in the prompt. Richer context = better output.                                                                                                                                                                    |
 
 ---
-
 #### What LLMs can and cannot do
 
 | CAN DO well                       | CANNOT DO reliably                          |
@@ -136,7 +137,6 @@ When we type any prompt in human readable language like English, LLM doesn't und
 
 Recap: a token is a sub-word puzzle piece, not a word or a character; BPE builds its set of pieces from what appeared most often in training text, so common English words are cheap (one piece) and rare words, code, and non-English text are expensive (several pieces).
 
-Recap: an LLM repeatedly predicts one next token at a time from everything typed so far, and that simple loop — run billions of times during training — is what produces language ability, reasoning-like behaviour, and also its failure modes (hallucination, non-determinism).
 
 #### 2.3.0 What is a token?
 
@@ -201,8 +201,17 @@ Tokenisation is Useful, Suppose the model has never seen as particular word befo
 ---
 #### 2.3.2 Byte-Pair Encoding (BPE) — how the puzzle pieces are chosen
 
-BPE builds its set of puzzle pieces (the *vocabulary*) by scanning huge amounts of text and repeatedly merging whichever pair of adjacent pieces appears most often, starting from individual characters:
+Byte-Pair Encoding (BPE) is a subword tokenization algorithm used by many Large Language Models. Instead of splitting text into whole words or individual characters, BPE breaks text into frequently occurring subwords. This helps the model handle unknown words, reduce vocabulary size, and efficiently tokenize rare or complex words.
 
+```
+unhappiness
+↓
+["un", "happi", "ness"] 
+```
+
+Instead of treating `"unhappiness"` as one unknown word, BPE splits it into meaningful subword tokens that the model already understands.
+
+BPE builds its set of puzzle pieces (the *vocabulary*) by scanning huge amounts of text and repeatedly merging whichever pair of adjacent pieces appears most often, starting from individual characters:
 
 ```
 Step (characters):         h e l l o   w o r l d
@@ -222,12 +231,14 @@ After many merges: common words end up as one piece;
 
 **Q8. "How does BPE tokenisation handle a word it has never seen before?"**
 
-BPE cannot produce a single token for an unseen word because that word was never frequent enough in training to get its own merged entry in the vocabulary. Instead, BPE falls back to smaller sub-word pieces — potentially down to individual bytes or characters — that are always in the vocabulary. So an invented word like "grokkinomics" might be tokenised as ["gr", "ok", "kin", "om", "ics"], costing five tokens instead of one. This graceful degradation means BPE never produces an unknown-token error, but rare words and non-English text cost more tokens per unit of meaning.
+BPE cannot produce a single token for an unseen word because that word was never frequent enough in training to get its own merged entry in the vocabulary. Instead, BPE falls back to smaller sub-word pieces — potentially down to individual bytes or characters — that are always in the vocabulary. So an invented word like "grokkinomics" might be tokenised as `["gr", "ok", "kin", "om", "ics"]`, costing five tokens instead of one. This graceful degradation means BPE never produces an unknown-token error, but rare words and non-English text cost more tokens per unit of meaning.
 
 ---
 #### 2.3.3 Context Window
 
-The **context window** is the maximum number of tokens a model can process in a single forward pass. It includes both **input** tokens (your prompt + conversation history) and **output** tokens(the model's response).
+The **context window** is the maximum number of tokens a model can process in a single forward pass. It includes both 
+- **input** tokens (your prompt + conversation history) and 
+- **output** tokens (the model's response).
 
 LLMs can only "remember" a limited amount of information **during one conversation/request**. That memory is called the **Context Window**.
 

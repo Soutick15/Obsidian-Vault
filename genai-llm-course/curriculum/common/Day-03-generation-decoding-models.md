@@ -32,15 +32,28 @@ Key intuitions:
 
 #### Phase 2: Supervised Fine-Tuning (SFT)
 
-Human annotators write (prompt, ideal-response) pairs. The base model is fine-tuned on these pairs to teach it the **instruction-following format** — how to behave as an assistant that answers questions rather than just continuing text.
+> **Supervised Fine-Tuning (SFT)** is the process of taking a **pre-trained Large Language Model** and training it further using **human-labeled input-output pairs**. Human annotators create **(prompt, ideal response)** examples, and the model learns to generate responses that match these examples. The goal is to teach the model how to respond in a desired style, format, or domain, and how to behave as an assistant that answers questions rather than simply continuing text.
 
-After SFT, the model is usable but still imperfectly calibrated: it may be verbose, sycophantic, or occasionally harmful.
+> After SFT, the model becomes much better at following instructions, but it may still be overly verbose, biased, sycophantic, or occasionally produce unsafe or incorrect responses. This is why many modern LLMs undergo an additional alignment stage, such as **Reinforcement Learning from Human Feedback (RLHF)**.
 
 #### Phase 3: Preference Alignment — RLHF and DPO
 
-**Reinforcement Learning from Human Feedback (RLHF):** Human raters compare pairs of model outputs and label which is better. A *reward model* is trained on these preferences. The LLM is then fine-tuned with reinforcement learning to maximise the reward model's score.
+##### Reinforcement Learning from Human Feedback (RLHF) :
 
-**Direct Preference Optimization (DPO):** A more recent and simpler alternative — It skips the separate reward model and directly optimises the policy using preference pairs. Most current frontier models use some variant of DPO or hybrid approaches.
+>It is a training technique used after Supervised Fine-Tuning (SFT) to align a Large Language Model with human preferences. The model first generates multiple responses to the same prompt, and human annotators rank or compare these responses. 
+>
+>A Reward Model is then trained on these human preferences, and the LLM is further fine-tuned using Reinforcement Learning to maximize the Reward Model's score. This helps the model produce responses that are more helpful, truthful, and safe.
+
+
+#### Direct Preference Optimization (DPO): 
+
+>**DPO (Direct Preference Optimization)** is becoming a very popular interview topic because many modern LLMs (including versions of Llama, Mistral, and others) use it instead of the traditional RLHF pipeline.
+>
+> **Direct Preference Optimization (DPO)** is an alignment technique that trains a Large Language Model directly from **human preference data** without using a separate Reward Model or Reinforcement Learning. 
+> 
+> Instead, it learns to increase the probability of preferred responses and decrease the probability of rejected responses, making the training process simpler, more stable, and computationally efficient.
+
+
 
 **Intuition:** RLHF/DPO teaches the model to be helpful, harmless, and honest. It is also where much of the model's "personality" is shaped.
 
