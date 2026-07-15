@@ -46,14 +46,23 @@ import anthropic
 client = anthropic.Anthropic(api_key="sk-ant-...")
 
 response = client.messages.create(
-    model="claude-haiku-4-5",        # which model to call
-    max_tokens=1024,                  # hard ceiling on output tokens
-    temperature=0.7,                  # 0=deterministic, 1=default, >1=creative
+    model = "claude-haiku-4-5",        # which model to call
+    max_tokens = 1024,                  # hard ceiling on output tokens
+    temperature = 0.7,                  # 0=deterministic, 1=default, >1=creative
     system="You are a helpful assistant.",  # optional system prompt (string)
     messages=[                        # conversation history
-        {"role": "user",    "content": "What is 12 * 7?"},
-        {"role": "assistant","content": "The answer is 84."},
-        {"role": "user",    "content": "Now add 100."},
+        {
+	        "role": "user",
+	        "content": "What is 12 * 7?"
+        },
+        {
+	        "role": "assistant",
+	        "content": "The answer is 84."
+	    },
+        {
+	        "role": "user",
+	        "content": "Now add 100."
+	    },
     ],
 )
 
@@ -74,14 +83,26 @@ from openai import OpenAI
 client = OpenAI(api_key="sk-...")
 
 response = client.chat.completions.create(
-    model="gpt-5.4-mini",
-    max_tokens=1024,
-    temperature=0.7,
-    messages=[
-        {"role": "system",    "content": "You are a helpful assistant."},
-        {"role": "user",      "content": "What is 12 * 7?"},
-        {"role": "assistant", "content": "The answer is 84."},
-        {"role": "user",      "content": "Now add 100."},
+    model = "gpt-5.4-mini",
+    max_tokens = 1024,
+    temperature = 0.7,
+    messages = [
+        {
+	        "role": "system",
+	        "content": "You are a helpful assistant."
+		},
+        {
+	        "role": "user",
+	        "content": "What is 12 * 7?"
+	    },
+        {
+	        "role": "assistant",
+	        "content": "The answer is 84."
+	    },
+        {
+	        "role": "user",
+	        "content": "Now add 100."
+	    },
     ],
 )
 
@@ -126,10 +147,10 @@ def chat(user_input: str, system: str = "") -> str:
 		}
 	)
     response = client.messages.create(
-        model="claude-haiku-4-5",
-        max_tokens=512,
-        system=system,
-        messages=history,
+        model = "claude-haiku-4-5",
+        max_tokens = 512,
+        system = system,
+        messages = history,
     )
     assistant_text = response.content[0].text
     history.append(
@@ -163,23 +184,38 @@ Under the hood, streaming uses **Server-Sent Events (SSE)** — the connection t
 with client.messages.stream(
     model="claude-haiku-4-5",
     max_tokens=512,
-    messages=[{"role": "user", "content": "Tell me a short story."}],
+    messages=[
+	    {
+			"role": "user",
+			"content": "Tell me a short story."
+		}
+	],
 ) as stream:
     for text_chunk in stream.text_stream:
         print(text_chunk, end="", flush=True)   # print each chunk as it arrives
     print()  # newline at the end
     final = stream.get_final_message()           # the complete Message, once done
-    print(f"\nTokens used: {final.usage.input_tokens} in / {final.usage.output_tokens} out")
+    print(
+	    f"\nTokens used: 
+	    {final.usage.input_tokens} in / 
+	    {final.usage.output_tokens}
+	     out"
+	)
 ```
 
 #### Streaming with OpenAI
 
 ```python
 stream = client.chat.completions.create(
-    model="gpt-5.4-mini",
-    max_tokens=512,
-    messages=[{"role": "user", "content": "Tell me a short story."}],
-    stream=True,
+    model = "gpt-5.4-mini",
+    max_tokens = 512,
+    messages = [
+	    {
+		    "role": "user",
+		    "content": "Tell me a short story."
+		}
+	],
+    stream = True,
 )
 for chunk in stream:
     delta = chunk.choices[0].delta.content
@@ -273,11 +309,20 @@ response = client.messages.create(
     model="claude-haiku-4-5",
     max_tokens=512,
     tools=tools,
-    messages=[{"role": "user", "content": "What is (45 * 3) + 17?"}],
+    messages=[
+	    {
+		    "role": "user",
+		    "content": "What is (45 * 3) + 17?"
+		}
+	],
 )
 
 if response.stop_reason == "tool_use":
-    tool_block = next(b for b in response.content if b.type == "tool_use")
+    tool_block = next(
+	    b 
+	    for b in response.content 
+	    if b.type == "tool_use"
+	)
     tool_name  = tool_block.name          # "calculate"
     tool_input = tool_block.input         # {"expression": "45 * 3 + 17"}
     tool_id    = tool_block.id            # unique call ID -- you'll need this to reply
@@ -290,9 +335,17 @@ result = safe_calc(tool_input["expression"])  # your own function -- see the lab
 
 # Append the assistant's tool request + your tool result, then call again
 messages = [
-    {"role": "user",      "content": "What is (45 * 3) + 17?"},
-    {"role": "assistant", "content": response.content},       # includes the tool_use block
-    {"role": "user",      "content": [                        # tool_result block
+    {
+	    "role": "user",
+	    "content": "What is (45 * 3) + 17?"
+	},
+    {
+	    "role": "assistant",
+	    "content": response.content # includes the tool_use block
+	},       
+    {
+	    "role": "user",
+	    "content": [       # tool_result block
         {
             "type": "tool_result",
             "tool_use_id": tool_id,
@@ -302,10 +355,10 @@ messages = [
 ]
 
 final = client.messages.create(
-    model="claude-haiku-4-5",
-    max_tokens=512,
-    tools=tools,
-    messages=messages,
+    model = "claude-haiku-4-5",
+    max_tokens = 512,
+    tools = tools,
+    messages = messages,
 )
 print(final.content[0].text)  # "(45 × 3) + 17 = 152"
 ```
@@ -346,22 +399,27 @@ with open("chart.png", "rb") as f:
     img_data = base64.b64encode(f.read()).decode()
 
 response = client.messages.create(
-    model="claude-haiku-4-5",
-    max_tokens=512,
-    messages=[{
-        "role": "user",
-        "content": [
-            {
-                "type": "image",
-                "source": {
-                    "type": "base64",
-                    "media_type": "image/png",
-                    "data": img_data,
-                },
-            },
-            {"type": "text", "text": "Summarize this chart in one paragraph."},
-        ],
-    }],
+    model = "claude-haiku-4-5",
+    max_tokens = 512,
+    messages = [
+	    {
+	        "role": "user",
+	        "content": [
+		        {
+	                "type": "image",
+	                "source": {
+	                    "type": "base64",
+	                    "media_type": "image/png",
+	                    "data": img_data,
+	                },
+	            },
+	            {
+		            "type": "text",
+		            "text": "Summarize this chart in one paragraph."
+		        },
+	        ],
+	    }
+	],
 )
 ```
 

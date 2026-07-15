@@ -20,15 +20,92 @@ By the end of Day 8 you will be able to:
 
 ## 2. Concept Reading
 
-### 2.1 Why Naive RAG Underperforms
+### 2.1 Why Basic RAG Underperforms
 
-Basic RAG (Day 7) encodes queries and documents with a **bi-encoder** and retrieves by cosine/dot-product similarity. This works reasonably well but breaks down when:
+Imagine we built the RAG system from Day 7.
 
-- **Lexical mismatch** — The query uses exact product codes, names, or acronyms the embedder has never linked to the document text.
-- **Semantic drift** — Short queries give vague embeddings that rank semantically adjacent but irrelevant chunks highly.
-- **Chunking artifacts** — Key facts straddle chunk boundaries; neither chunk alone is retrievable.
-- **Missing context** — The top-k window is too small to include the relevant chunk (recall failure), or the right chunk exists but is buried (rank failure).
 
+```
+User Question
+      │
+      ▼
+Embedding Model
+      │
+      ▼
+Vector Database
+      │
+      ▼
+Top 5 Similar Chunks
+      │
+      ▼
+	 LLM
+      │
+      ▼
+    Answer
+```
+
+Basic RAG (Day 7) encodes queries and documents with a **bi-encoder** and retrieves by cosine/dot-product similarity. 
+
+#### It works well about 70–90% of the time, but it breaks down when:
+
+##### Lexical mismatch
+
+Embeddings are excellent with natural language, but they are not perfect with exact identifiers, codes, acronyms, or rare domain-specific terminology.
+
+The query uses exact product codes, names, or acronyms the embedder has never linked to the document text.
+
+Example - Suppose our company documentation contains:
+```
+Product Code: HR-PT-2026
+```
+A user asks:
+
+```
+Tell me about HR-PT-2026.
+```
+
+If the embedding model has never seen that product code during training, it may treat it as just a strange sequence of characters.
+
+---
+
+##### Semantic drift
+Short queries give vague embeddings that rank semantically adjacent but irrelevant chunks highly.
+
+---
+##### **Chunking artifacts** 
+Key facts straddle chunk boundaries; neither chunk alone is retrievable.
+Imagine your chunk size is 500 tokens. Suppose the original document says:
+
+```
+Employees receive 20 days of leave.
+
+Unused leave can be carried forward for one year.
+```
+
+Unfortunately the chunk boundary happens right here. 
+
+```
+Chunk 1 : Employees receive 20 days of leave.
+--------------------
+Chunk 2 : Unused leave can be carried forward...
+```
+Now the user asks: How does leave carry forward work?
+
+The embedding model might retrieve **Chunk 2**, but it no longer contains the earlier sentence that explained the leave policy.
+
+Or it retrieves **Chunk 1**, which doesn't mention carry forward.
+
+Neither chunk contains the complete picture.
+
+This is called a **Chunking Artifact**.
+
+The information was accidentally split apart during indexing.
+
+---
+##### Missing context
+The top-k window is too small to include the relevant chunk (recall failure), or the right chunk exists but is buried (rank failure).
+
+---
 ### 2.2 Hybrid Search: Dense + Sparse (BM25)
 
 **Dense retrieval** (bi-encoders like `all-MiniLM-L6-v2`) captures semantic meaning.  
@@ -51,6 +128,8 @@ rrf(d) = Σ  1 / (k + rank_i(d))
 ```
 
 where the sum is over retrieval systems and `k ≈ 60` is a stability constant.
+
+---
 
 ### 2.3 Re-Ranking with a Cross-Encoder
 

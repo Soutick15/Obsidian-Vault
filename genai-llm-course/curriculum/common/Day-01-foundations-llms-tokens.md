@@ -465,9 +465,6 @@ BPE builds its vocabulary from the most frequent merges in the training corpus (
 (3) the model has no external fact-checking mechanism; 
 (4) stochastic sampling introduces variation.
 
-
-
-
 ---
 
 **Q1. "Can you explain what a large language model is to a non-technical stakeholder?"**
