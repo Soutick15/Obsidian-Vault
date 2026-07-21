@@ -94,9 +94,9 @@ Interview Answer :
 
 #### Self-Attention
 
-<details>
+
 <summary>🔍 The math (optional)</summary>
-</details>
+
 
 Each token's embedding is multiplied by three learned weight matrices to produce its Query, Key, and Value vectors: `Q = X·W_Q`, `K = X·W_K`, `V = X·W_V`.
 

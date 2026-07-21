@@ -289,12 +289,12 @@ Comparison Operator — return bool (true / false) : `>` , `<` , `==` , `>=` , `
  Logical operators : `and` , `or` , `not`
 
 ```python
-
 True and False   # False
 True or False    # True
 not True         # False
 not False        # True
 ```
+
 ---
 
 ### 2.6 Strings and f-strings
@@ -349,7 +349,118 @@ print(f"Length: {len(greeting)}") # Length: 5
 
 ```
 
-Useful string methods: `.split()`, `.strip()`, `.lower()`, `.upper()`, `.replace()`, `.startswith()`.
+
+#### Useful string methods: `.split()`, `.strip()`, `.lower()`, `.upper()`, `.replace()`, `.startswith()`.
+
+##### `.strip()` :
+
+- It returns another string after removing whitespace  (spaces, tabs, newlines) only from the beginning and end, not from the middle.
+- It **does not** return a list it returns a new string
+
+Before strip : Notice the code below, because of the triple quotes it prints all the tab, space and newline as it is.
+
+**Example - 1**
+```python
+text = """
+
+Hi
+
+My      Name
+
+        is    
+Alice
+
+
+"""
+print(text)
+```
+
+```output
+
+
+
+Hi
+
+My      Name
+
+        is    
+Alice
+
+
+
+```
+
+now with `.strip()`
+
+```python
+text = """
+
+
+Hi
+
+My      Name
+
+        is    
+Alice
+
+
+""".strip()
+
+print(text)
+```
+
+The white space only from beginning and end is gone. 
+
+```output
+Hi
+
+My      Name
+
+        is    
+Alice
+
+```
+
+**Example - 2**
+```python
+text = ".:.,I.:.love.:.python:..:,,:"
+clean = text.strip(".:,")
+print(clean)                # I.:.love.:.python
+```
+
+**Example - 3**
+```python
+text = "(Hello)"
+clean = text.strip("()")
+print(clean)                # Hello
+```
+
+---
+##### `.split()`
+
+It converts the `str` to  `list[str]` based on the condition inside it.
+
+```python
+text = "I love Python"
+print(text) # I love Python
+```
+
+```python
+text = "I love Python"
+new_text = text.split(" ") # when find space split it
+
+print(new_text) # ['I', 'love', 'Python']
+```
+
+```python
+text = """I
+love
+python """
+
+new_text = text.split("\n") # when find space split it
+
+print(new_text) # ['I', 'love', 'Python']
+```
 
 ---
 
@@ -480,8 +591,6 @@ for i in fruits:
 # This will print the `i` values only
 for i in range(len(fruits)):
 	print (i)                 # 0 1 2 3 4
-    
-    
 ```
 
 
@@ -598,6 +707,8 @@ if __name__ == "__main__":
 - Because indentation is syntactically meaningful, all Python code looks similar regardless of who wrote it — the layout you see in the editor is the layout the interpreter uses to understand nesting. 
 - The downside is that mixing tabs and spaces causes `IndentationError`; most editors are configured to convert tabs to 4 spaces automatically.
 
+
+---
 ## 3. Hands-on Exercise
 
 Exercise files live in `exercises/day-01/`.
@@ -638,8 +749,6 @@ Words per starting letter:
 ```
 
 ---
-
-
 
 **Q6. What is the purpose of `if __name__ == "__main__":`?**
 

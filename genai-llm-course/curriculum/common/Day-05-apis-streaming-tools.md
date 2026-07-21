@@ -651,7 +651,7 @@ Answer these before looking at the answers.
 **Q1.** You're building a multi-turn chat app with the Anthropic API. After five exchanges, your 6th request fails with "messages must alternate user/assistant roles." What's the most likely cause?
 
 
-<summary>Show answer</summary>
+
 
 You appended the assistant reply to `history` but didn't include it — or you accidentally added two user messages in a row. The API requires strict alternating roles. Check that each `messages.create()` call ends with a user message, and that the history list strictly alternates `user → assistant → user → assistant → …`.
 
@@ -660,7 +660,7 @@ You appended the assistant reply to `history` but didn't include it — or you a
 **Q2.** What does `flush=True` do in `print(chunk, end="", flush=True)` and why is it needed for streaming?
 
 
-<summary>Show answer</summary>
+
 
 Python buffers stdout by default — text accumulates in a buffer and only appears when the buffer fills or the program ends. `flush=True` forces the buffer to write immediately after each `print()` call. Without it, streaming tokens would all appear at once at the end, defeating the purpose.
 
@@ -669,7 +669,7 @@ Python buffers stdout by default — text accumulates in a buffer and only appea
 **Q3.** A user asks "What time is it?" The model returns `stop_reason = "tool_use"` with `tool_name = "get_current_time"`. What exact steps must your code take before calling the API again?
 
 
-<summary>Show answer</summary>
+
 
 1. Extract `tool_id`, `tool_name`, and `tool_input` from the `tool_use` content block.
 2. Execute `get_current_time()` locally.
@@ -682,7 +682,7 @@ Python buffers stdout by default — text accumulates in a buffer and only appea
 **Q4.** What is the difference between how Claude and OpenAI handle the system prompt in their messages arrays?
 
 
-<summary>Show answer</summary>
+
 
 Claude accepts `system` as a **separate top-level parameter** (`system="…"`) — it is not a message in the list. OpenAI embeds it as the first element of the `messages` list with `role: "system"`. This is a common source of bugs when writing provider-flexible code.
 
@@ -691,7 +691,7 @@ Claude accepts `system` as a **separate top-level parameter** (`system="…"`) �
 **Q5.** Your app is receiving HTTP 429 errors. You add a `time.sleep(60)` before every retry. What's wrong with this approach?
 
 
-<summary>Show answer</summary>
+
 
 A fixed 60-second wait is too long most of the time (rate limits often clear in seconds) and may still be too short during heavy load. The correct approach is **exponential backoff**: wait 1s, then 2s, then 4s, etc., often with a small random jitter. The Anthropic SDK also offers built-in retry with `max_retries=` on the client.
 
@@ -700,7 +700,7 @@ A fixed 60-second wait is too long most of the time (rate limits often clear in 
 **Q6.** An image you send with a Claude request is 1024×1024 pixels. Roughly how many tokens does it consume, and how does that affect your `max_tokens` setting?
 
 
-<summary>Show answer</summary>
+
 
 A typical image consumes roughly 1,000–1,700 input tokens. These count against your **context window** (input side) but not against `max_tokens`, which only limits the output. However, if total input tokens (text + images) approach the context limit, the model may truncate or error. Budget accordingly.
 
@@ -709,7 +709,7 @@ A typical image consumes roughly 1,000–1,700 input tokens. These count against
 **Q7.** What does `stop_reason = "max_tokens"` tell you, and what should you do about it?
 
 
-<summary>Show answer</summary>
+
 
 It means the model hit the output token limit before finishing its answer — the response is truncated. You should either: (a) increase `max_tokens`, (b) ask the model for a shorter response via your prompt, or (c) send a follow-up message asking the model to continue (be careful — it may repeat context).
 
@@ -718,7 +718,7 @@ It means the model hit the output token limit before finishing its answer — th
 **Q8.** True or False: the model executes the function/tool code directly when it outputs a `tool_use` block.
 
 
-<summary>Show answer</summary>
+
 
 **False.** The model only outputs a *request* in JSON form — `{"name": "calculate", "input": {"expression": "3+4"}}`. Your application code is entirely responsible for executing the function and returning the result. The model has no ability to run code directly.
 
@@ -735,7 +735,7 @@ These questions test deeper, applied understanding of the day's concepts on APIs
 **Q1. "Walk me through how tool calling works end-to-end."**
 
 
-<summary>Show answer</summary>
+
 
 Tool calling is a two-request loop. In the first request, you send the user's message along with a list of tool definitions — each is a JSON schema describing the tool's name, purpose, and parameters. If the model determines a tool is needed, it returns early with `stop_reason = "tool_use"` and a structured JSON block containing the tool name and arguments it wants passed. Your application code then executes the real function locally. You add the assistant's tool-request block and your function's result (as a `tool_result` message) to the conversation history, then send a second API request. The model reads the result and produces the final answer. The model never executes code itself — it only requests execution.
 
@@ -743,7 +743,7 @@ Tool calling is a two-request loop. In the first request, you send the user's me
 **Q2. "Why would you use streaming in an application? What are the trade-offs?"**
 
 
-<summary>Show answer</summary>
+
 
 Streaming dramatically improves perceived latency. Without it, the user waits 5–30 seconds before seeing any output. With streaming, the first tokens appear within ~200ms, which feels interactive. The trade-off: streaming complicates error handling (you've already started writing to the UI when a mid-stream error occurs), makes it harder to post-process the full response before displaying it (e.g., filtering, parsing JSON), and usage stats only arrive at the end of the stream. For simple chat UIs, streaming is almost always worth it. For batch processing or when you need to validate the full response before showing it, non-streaming is simpler.
 
@@ -751,7 +751,7 @@ Streaming dramatically improves perceived latency. Without it, the user waits 5�
 **Q3. "How do you handle rate limits reliably?"**
 
 
-<summary>Show answer</summary>
+
 
 Rate limits mean you've exceeded the provider's tokens-per-minute or requests-per-minute quota. The correct pattern is exponential backoff with jitter: catch the 429 error, wait 2^attempt seconds (plus a random 0–1s jitter to avoid thundering herd), and retry up to a maximum number of attempts. Most modern SDKs (Anthropic, OpenAI) have `max_retries` built in, so you often don't need to implement this manually. For high-throughput systems you also want to track your token usage against the rate limit budget and throttle proactively. At scale, a request queue with a leaky-bucket rate controller is the proper architecture.
 
@@ -760,7 +760,7 @@ Rate limits mean you've exceeded the provider's tokens-per-minute or requests-pe
 **Q4. "How does a multi-turn conversation work under the hood? Why is it stateless?"**
 
 
-<summary>Show answer</summary>
+
 
 LLM APIs are stateless — every request is independent. There is no server-side session. To create a multi-turn conversation you maintain the full message history in your application and send it with every request. The model reads the entire history and produces the next reply. This means cost and latency grow with conversation length. In production you manage this by truncating old messages, summarizing older context, or using dedicated memory systems. The stateless design is intentional: it makes the API horizontally scalable and gives developers full control over what context the model sees.
 
@@ -769,7 +769,7 @@ LLM APIs are stateless — every request is independent. There is no server-side
 **Q5. "What's the difference between `max_tokens` and the context window?"**
 
 
-<summary>Show answer</summary>
+
 
 `max_tokens` is a **hard cap on output length** — it limits how many tokens the model is allowed to generate in one response. The **context window** is the total token budget for a single forward pass, covering both input (system prompt + conversation history + tool definitions) and output combined. If your input is 3000 tokens and the context window is 4096, you have at most 1096 tokens available for output regardless of what `max_tokens` says. Setting `max_tokens` higher than the remaining context window budget has no effect — the model simply stops when the window fills.
 
@@ -778,7 +778,7 @@ LLM APIs are stateless — every request is independent. There is no server-side
 **Q6. "How would you let an LLM access a live database during a conversation?"**
 
 
-<summary>Show answer</summary>
+
 
 I'd use tool calling. I'd define a tool schema for, say, `query_database` with parameters like `table`, `filter`, and `limit`. The model, when it needs data, outputs a `tool_use` block with its query intent. My code intercepts this, translates it into a safe SQL query (parameterized, never built from raw model output), executes it against the DB, and returns the rows as a JSON string in a `tool_result` block. The model then incorporates the data into its answer. Security is critical — always validate and sanitize tool inputs before execution; treat them like untrusted user input.
 
@@ -786,7 +786,7 @@ I'd use tool calling. I'd define a tool schema for, say, `query_database` with p
 **Q7. "How would you compare Claude and GPT for a new chat feature?"**
 
 
-<summary>Show answer</summary>
+
 
 I'd start with a few clarifying questions: what's the primary use case, what's the expected volume, and are there specific data-handling requirements? Technically, both are excellent for chat. Claude tends to excel at long-context tasks and nuanced instruction-following. GPT has a broad ecosystem and many third-party integrations. For a new project I'd recommend a provider-flexible architecture: abstract the API call behind a thin provider interface so you can swap models without rewriting application logic. Then run an eval on your actual data before committing — benchmark differences on your specific task matter far more than general benchmarks.
 
@@ -795,7 +795,7 @@ I'd start with a few clarifying questions: what's the primary use case, what's t
 **Q8. "Explain Server-Sent Events. Why does streaming use SSE rather than WebSockets?"**
 
 
-<summary>Show answer</summary>
+
 
 SSE (Server-Sent Events) is a one-directional HTTP-based protocol: the server holds open an HTTP/1.1 or HTTP/2 connection and pushes `data:` frames as they become available. It uses plain HTTP, works through proxies and firewalls, has automatic reconnect built into browsers, and requires no protocol upgrade. WebSockets are bidirectional and more complex to proxy/scale. For LLM streaming the communication is inherently one-directional (server → client) once the request is sent, making SSE the simpler and more robust choice. At the Python level you just iterate over the stream — the SSE framing is handled by the SDK.
 
@@ -804,7 +804,7 @@ SSE (Server-Sent Events) is a one-directional HTTP-based protocol: the server ho
 **Q9. "What are the main error types you need to handle when calling an LLM API?"**
 
 
-<summary>Show answer</summary>
+
 
 I group them into three buckets. **Don't retry**: authentication errors (401 — fix the key), permission errors (403 — fix the plan/model), and validation errors (400 — fix the request shape). **Retry with backoff**: rate limit (429), service overloaded (529), and server errors (500). **Retry with a longer timeout or reduced payload**: timeout errors. In addition I watch for `stop_reason = "max_tokens"` which isn't an HTTP error but signals a truncated response, and `content_filter` which means the request was blocked by safety systems. Good production code wraps every API call in structured error handling with logging.
 
@@ -813,7 +813,7 @@ I group them into three buckets. **Don't retry**: authentication errors (401 —
 **Q10. "How do images affect token usage and cost?"**
 
 
-<summary>Show answer</summary>
+
 
 Images are converted into tokens before processing — a typical 1024×1024 image costs roughly 1,000–1,700 input tokens depending on the provider's tiling strategy. These count against the context window and are billed as input tokens. For cost-sensitive applications this matters a lot: one image can cost as much as 1000+ words of text. Strategies to manage this: resize images before sending (smaller = fewer tokens), use lower-resolution thumbnails when full resolution isn't needed, and cache responses when the same image is repeatedly queried. Always confirm the per-image token cost in the provider's documentation for the specific model you're using.
 

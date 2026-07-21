@@ -1,3 +1,5 @@
+
+
 # Day 7 — RAG Basics: Retrieve, Augment, Generate
 
 **Track:** Developer | **Week:** 2 | **Day:** 7 of 15
@@ -52,17 +54,17 @@ The RAG pipeline consists of three stages:
 
 
 ```
-User question
-      │
-      ▼
+			User question
+			      │
+			      ▼
  ┌─────────────────────────────────┐
  │  RETRIEVE                       │
  │  • Embed the question           │
  │  • ANN search in vector store   │
  │  • Return top-k chunks + meta   │
- └─────────────┬───────────────────┘
-               │ top-k chunks
-               ▼
+ └──────────────-──┬───────────────┘
+	               │ top-k chunks
+	               ▼
  ┌─────────────────────────────────┐
  │  AUGMENT                        │
  │  • Build prompt:                │
@@ -84,23 +86,74 @@ The retriever and the generator are **decoupled**: you can swap out the vector s
 ---
 ### 2.3 The Ingestion Pipeline
 
-Before a RAG system can retrieve anything, you must build the index. This is a one-time (or periodic) offline step:
+Before a RAG system can retrieve (Before anyone asks a question) anything, you must build the index. 
+
+
+This is a one-time (or periodic) offline step:
+
 
 ```
-Raw documents
+Raw documents (LeavePolicy.pdf)
       │
       ▼
-   LOAD          Read files from disk, web, database, etc.
+     LOAD    Read document/files from disk, web, database, etc.
       │
       ▼
-   CHUNK         Split into search-granularity pieces (see 2.4)
+    CHUNK    Split into search-granularity pieces (see 2.4)
       │
       ▼
-   EMBED         Convert each chunk to a dense vector
+    EMBED    Convert each chunk to a dense vector Embeddings
       │
       ▼
-   STORE         Write vectors + metadata to a vector database
+    STORE    Write vectors + metadata to a vector database
 ```
+
+step 1 - **LOAD :** Imagine your company stores documents in different places. like PDF Files , Word Files, Markdown Files, Database, Google Drive etc. The first job is simply Read the documents from the source. So the embedding model needs to read the text not a PDF file. Example
+
+```
+LeavePolicy.pdf → Read PDF → Extract Text → Employees receive 22 days of leave...
+```
+
+step 2 - **CHUNK** : Why chunk at all? Most documents are much larger than an LLM's context window. Instead of embedding an entire document, we split it into smaller chunks so the retriever can find only the most relevant parts.
+Suppose your PDF contains 100 pages the entire PDF cant be embedded at a time. instead we can do is:
+
+```
+Employee_Handbook == 100 pages
+
+Chunk 1 : Leave Policy
+Chunk 2 : Insurance
+Chunk 3 : Laptop Policy
+Chunk 4 : Travel Policy
+```
+
+Now each chunk discusses one topic which is much better.
+
+step 3 - **EMBED** : Now every chunk becomes an embedding vector. So the semantic search becomes possible.
+
+Example
+
+```
+Chunk 1
+↓
+Employees receive
+22 days of leave.
+↓
+Embedding Model
+↓
+[0.21,-0.42,0.88,...]
+```
+
+Every chunk gets its own vector, and not every document.
+
+```
+Employee_Handbook == 100 pages
+
+Chunk 1 : Leave Policy  → Embedding Model → Vector 1 → Vector DB
+Chunk 2 : Insurance     → Embedding Model → Vector 2
+Chunk 3 : Laptop Policy → Embedding Model → Vector 3
+Chunk 4 : Travel Policy → Embedding Model → Vector 4
+```
+
 
 The "right" granularity for a chunk is one that:
 - Contains a complete, self-contained thought
@@ -109,11 +162,7 @@ The "right" granularity for a chunk is one that:
 
 ### 2.4 Chunking Strategies
 
-> **Why chunk at all?**
->
-> Most documents are much larger than an LLM's context window. Instead of embedding an entire document, we split it into smaller chunks so the retriever can find only the most relevant parts.
-
-#### Fixed-size / token-window
+#### 2.4.0 Fixed-size / token-window
 Split every N tokens (or characters) regardless of sentence boundaries.
 
 ```
@@ -126,7 +175,7 @@ Chunk 3 → 500 tokens
 - **Con:** Can cut sentences mid-thought; no semantic awareness. May split information in the middle of: a sentence, a paragraph, an important explanation
 - **When to use:** Well-formatted documents where sentence boundaries are less important.
 
-#### Fixed-size with overlap
+#### 2.4.1 Fixed-size with overlap
 Same as above but adjacent chunks share M tokens of overlap (typically 10–20% of chunk size).
 
 Suppose the Chunk Size = 500 tokens
@@ -141,15 +190,17 @@ Chunk 2 : 401 → 900  # Overlap = 100 tokens
 - **Con:** Slight storage and compute overhead. - More storage (duplicate content). Slightly slower indexing.
 - **When to use:** Most practical RAG systems; the overlap is almost always worth it
 
-#### Recursive / structural splitting
+#### 2.4.2 Recursive / structural splitting
 Split first on paragraph breaks, then on sentence breaks, then on character count — preferring natural boundaries.
 
 - **Pro:** Produces semantically coherent chunks
 - **Con:** Chunk sizes vary; harder to predict retrieval coverage
 - **When to use:** Well-structured documents (policies, manuals, reports)
 
-#### Semantic chunking
-Embed each sentence; group sentences whose embeddings are similar; Instead of splitting after a fixed number of tokens, semantic chunking groups sentences that have similar meanings. A new chunk starts when the topic changes significantly.
+#### 2.4.3 Semantic chunking
+First embed each sentence then group sentences whose embeddings are similar instead of splitting after a fixed number of tokens.
+
+Semantic chunking groups sentences that have similar meanings. A new chunk starts when the topic changes significantly.
 
 - **Pro:** Chunks align with topic shifts rather than arbitrary token counts
 - **Con:** Expensive at ingestion time (one embedding per sentence); requires tuning the similarity threshold
@@ -157,6 +208,7 @@ Embed each sentence; group sentences whose embeddings are similar; Instead of sp
 
 **Day 7 lab** uses fixed-size with overlap — the sweet spot for a first RAG system.
 
+---
 ### 2.5 Building the Augmented Prompt
 
 A well-designed RAG prompt has three parts:

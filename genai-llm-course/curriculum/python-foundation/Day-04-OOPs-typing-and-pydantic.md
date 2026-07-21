@@ -761,57 +761,57 @@ python curriculum/python-foundation/exercises/day-04/starter.py
 
 **Q3. Do Python type hints affect runtime behaviour?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 No. Python's interpreter ignores annotations at runtime (they are stored in `__annotations__` but not enforced). Type hints only matter to static analysis tools — mypy, pyright, IDE autocompletion — and to libraries like Pydantic that explicitly read them. You can pass the wrong type at runtime and Python will not raise an error unless the called code itself checks.
 
-</details>
+
 
 **Q4. What is `Optional[str]` equivalent to in Python 3.10+ syntax?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 `str | None`. Both express that a value is either a `str` or `None`. The newer union syntax (`X | Y`) is preferred in Python 3.10+ because it is more concise and does not require importing `Optional` from `typing`.
 
-</details>
+
 
 **Q5. What does Pydantic's `ValidationError` contain?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 A `ValidationError` contains a list of error details, one per field that failed validation. Each entry includes the field location (e.g., `['salary']`), the error type (e.g., `value_error`), and a human-readable message. You can iterate `e.errors()` to get a list of dicts, or call `str(e)` for a formatted summary.
 
-</details>
+
 
 **Q6. What is the purpose of `__enter__` and `__exit__` in a context manager?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 `__enter__` runs when the `with` block is entered; its return value is bound to the `as` variable. `__exit__` runs when the block exits — whether normally or due to an exception. It receives the exception type, value, and traceback as arguments; returning `True` suppresses the exception, returning `False` (or `None`) lets it propagate.
 
-</details>
+
 
 **Q7. What does `@functools.wraps(func)` do inside a decorator?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 It copies the wrapped function's `__name__`, `__doc__`, `__module__`, and `__qualname__` onto the `wrapper` function. Without it, every decorated function would appear to have the name `wrapper`, which breaks introspection, debugging, and tools that rely on `__name__`.
 
-</details>
+
 
 **Q8. Why use `logging` instead of `print` in application code?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 `logging` provides severity levels (DEBUG, INFO, WARNING, ERROR, CRITICAL) so you can filter output without deleting statements. It supports multiple handlers (console, file, remote) simultaneously, includes timestamps and caller info automatically, and can be configured globally — useful in larger programs and AI pipelines where you want fine-grained control over what appears in production logs.
 
-</details>
+
 
 ---
 
@@ -819,26 +819,26 @@ It copies the wrapped function's `__name__`, `__doc__`, `__module__`, and `__qua
 
 **Q1. Why does Pydantic matter for structured LLM outputs, and how does a `BaseModel` connect to that use case?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 LLMs return text. When you need structured data — a JSON object with specific fields, validated types, and constraints — you must parse and validate that text. Pydantic `BaseModel` subclasses serve as a schema: you declare the expected shape once, and Pydantic validates the parsed JSON against it. Frameworks like LangChain's output parsers and the Anthropic SDK's tool-use layer accept a `BaseModel` subclass to auto-generate a JSON Schema for the model's tool definition and then validate the returned arguments. This means a single class declaration replaces manual schema writing, manual validation, and manual type-casting.
 
-</details>
+
 
 **Q2. What is the MRO (Method Resolution Order) and why does it matter in inheritance?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 The MRO is the order in which Python searches base classes when resolving a method or attribute name. It is computed using the C3 linearisation algorithm and stored in `ClassName.__mro__`. In single inheritance it is simply child → parent → grandparent → `object`. In multiple inheritance (e.g., `class C(A, B)`) the MRO decides which parent's method wins when both define the same name. `super()` follows the MRO, so it does not always mean "the direct parent" — it means "the next class in the MRO." Understanding this prevents subtle bugs in cooperative multiple inheritance.
 
-</details>
+
 
 **Q3. How does Pydantic v2 differ from v1, and what are the most common migration pitfalls?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Pydantic v2 rewrote its core in Rust (via `pydantic-core`), making it roughly 5–50× faster. Key API changes:
 - `.dict()` → `.model_dump()`; `.json()` → `.model_dump_json()`
@@ -849,12 +849,12 @@ Pydantic v2 rewrote its core in Rust (via `pydantic-core`), making it roughly 5�
 
 Common pitfalls: forgetting `@classmethod` on `@field_validator`; using v1 `validator` which silently does nothing in v2; and relying on `orm_mode = True` which is now `from_attributes = True` in `ConfigDict`.
 
-</details>
+
 
 **Q4. What is the difference between composition and inheritance, and when should you prefer each?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Inheritance models an "is-a" relationship: a `Manager` *is an* `Employee`. Composition models a "has-a" relationship: a `Team` *has a* list of `Employee` objects. Prefer composition when:
 - The child does not truly satisfy the parent's full interface (Liskov Substitution Principle violation).
@@ -863,46 +863,46 @@ Inheritance models an "is-a" relationship: a `Manager` *is an* `Employee`. Compo
 
 Prefer inheritance when the subtype genuinely extends the parent's contract and the hierarchy is shallow (typically ≤ 2–3 levels). In AI framework code you will often see composition: a `ChatBot` class *holds* a `MemoryStore` and a `PromptBuilder` rather than inheriting from either.
 
-</details>
+
 
 **Q5. How do decorators work mechanically — what exactly happens at import time vs call time?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 At **import time** (when the module is loaded), Python evaluates the decorator expression and replaces the decorated name with the result. So `@timed` on `def slow(): ...` executes `slow = timed(slow)` immediately — `slow` is now the `wrapper` function. At **call time**, whenever you call `slow()`, you are calling `wrapper()`, which runs the timing logic, delegates to the original function, and returns its result. Decorators that accept arguments (e.g., `@retry(times=3)`) add one more level: the outer callable returns the actual decorator, which then wraps the function.
 
-</details>
+
 
 **Q6. What are `model_dump()` and `model_dump(mode="json")` in Pydantic v2, and when would you use each?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 `model_dump()` returns a Python `dict` with native Python types — `datetime` objects stay as `datetime`, `UUID` stays as `UUID`. This is ideal when you need to pass the data to other Python code. `model_dump(mode="json")` serialises to JSON-compatible types — `datetime` becomes an ISO string, `UUID` becomes a string, `Decimal` becomes a string or float depending on config. Use `mode="json"` when you are about to call `json.dumps()` or pass the dict to an HTTP client that expects JSON-serialisable data. There is also `model_dump_json()` which returns a `str` directly without an intermediate `dict`.
 
-</details>
+
 
 **Q7. Why are mutable default arguments dangerous in plain classes and how does `dataclasses.field(default_factory=...)` solve it?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 In Python, default argument values are evaluated once at function-definition time, not each time the function is called. If you write `def __init__(self, items=[])`, all instances share the *same* list object. Appending to `self.items` on one instance mutates every other instance's list too. `@dataclass` detects mutable defaults (list, dict, set) and raises a `ValueError` if you set them directly as field defaults, forcing you to use `field(default_factory=list)` instead. The factory is called fresh for each new instance, giving each its own independent list.
 
-</details>
+
 
 **Q8. How does the `logging` hierarchy work and why does using `getLogger(__name__)` matter?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Python loggers form a tree rooted at the root logger. A logger named `myapp.models` is a child of `myapp`, which is a child of the root. Log records propagate up the tree by default, so setting the level or handler on a parent logger affects all its children. `getLogger(__name__)` creates a logger named after the current module (e.g., `curriculum.day4`). This means:
 1. You can silence a noisy third-party library by disabling its top-level logger without affecting your own code.
 2. You can enable debug logging for just one package (`logging.getLogger("myapp.parsers").setLevel(logging.DEBUG)`) while keeping others quiet.
 3. Log records automatically show which module emitted the message, making large-application debugging much easier.
 
-</details>
+
 
 ---
 

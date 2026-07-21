@@ -262,89 +262,89 @@ See `labs/developer/day-11/README.md` for Colab/GPU instructions.
 
 **Q1.** A developer wants the model to always return JSON with a specific schema. Should they use (a) prompt engineering, (b) RAG, or (c) fine-tuning?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Start with (a) prompt engineering — structured output instructions plus few-shot examples in the system prompt often solve this reliably and at zero training cost. Fine-tuning is warranted only if the format still fails after serious prompt iteration.
 
-</details>
+
 
 ---
 
 **Q2.** True or False: Fine-tuning a model on your company's product documentation is an effective way to keep it up to date as documentation changes weekly.
 
-<details>
-<summary>Show answer</summary>
+
+
 
 False. Updating a fine-tuned model weekly is expensive and slow. RAG (retrieval-augmented generation) is the correct tool for up-to-date factual knowledge.
 
-</details>
+
 
 ---
 
 **Q3.** In LoRA, what does the `rank` (r) parameter control?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Rank controls the capacity (expressiveness) of the adapter. A lower rank (e.g., r=4) trains fewer parameters and is more regularised; a higher rank (e.g., r=64) can express more complex adaptations but uses more memory.
 
-</details>
+
 
 ---
 
 **Q4.** What is the key difference between LoRA and QLoRA?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 QLoRA additionally quantizes the frozen base model weights to 4-bit (NF4) using bitsandbytes, dramatically reducing GPU memory. LoRA adapters are still trained in 16-bit precision on top of the quantized base.
 
-</details>
+
 
 ---
 
 **Q5.** Name two signs that your LoRA fine-tune is overfitting.
 
-<details>
-<summary>Show answer</summary>
+
+
 
 (1) Eval loss rises while train loss keeps falling. (2) The model reproduces training examples verbatim or produces formulaic / repetitive outputs on new prompts.
 
-</details>
+
 
 ---
 
 **Q6.** You have 30 HR Q&A examples and 1 week of engineering time. Should you fine-tune?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Probably not. 30 examples is very likely insufficient for generalisation. Invest the time in prompt engineering and RAG first; collect more diverse, high-quality data before attempting fine-tuning.
 
-</details>
+
 
 ---
 
 **Q7.** Which quantization format is best suited for running a model on a laptop CPU with no GPU?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 GGUF (used by llama.cpp). It supports mixed-precision quantization (2–8 bit) and is optimised for CPU inference.
 
-</details>
+
 
 ---
 
 **Q8.** What does `lora_alpha` control and how does it relate to `r`?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 `lora_alpha` is a scaling factor applied to the adapter output: the effective scaling is `alpha / r`. A common default is `alpha = r` (scaling = 1). Setting `alpha = 2r` doubles the adapter's contribution. It lets you tune the adapter's influence without changing its parameter count.
 
-</details>
+
 
 ---
 
@@ -352,111 +352,111 @@ GGUF (used by llama.cpp). It supports mixed-precision quantization (2–8 bit) a
 
 **Q1. Why can't fine-tuning reliably inject new factual knowledge?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Pre-training encodes knowledge into billions of weight interactions in a distributed, entangled way. Trying to update a subset of weights (or even all weights) on a small dataset to "add" a new fact tends to either (a) not stick — the model doesn't generalise the new fact robustly — or (b) cause catastrophic forgetting of related existing knowledge. The model doesn't store facts in addressable slots; it stores statistical patterns. Retrieval (RAG) is fundamentally better suited to injecting specific, verifiable facts because it supplies them explicitly at inference time.
 
-</details>
+
 
 ---
 
 **Q2. Can you combine fine-tuning and RAG in production, and if so, how?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Yes — this is a common and effective pattern. Fine-tune the model on your preferred output format, domain terminology, and interaction style. Then at inference time, use a RAG pipeline to inject current factual context into the prompt. The fine-tuned model "knows how to talk" and the retrieval system "knows what to say." The adapter stays frozen; only the retrieved context changes per query.
 
-</details>
+
 
 ---
 
 **Q3. Why does LoRA use two matrices (A and B) instead of just one low-rank update matrix?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 A single matrix of rank r could be stored directly, but initializing it to zero while maintaining gradient flow requires the two-matrix decomposition. LoRA initializes A with random Gaussian values and B with **zeros**, so the **initial adapter contribution** (delta = B × A) is **zero** — the base model's output is completely **unchanged at step 0**. The adapter does not start as a copy of the base model; its initial contribution is simply absent. This stable initialization is critical; a single matrix initialized to zero gives zero gradients and no learning signal.
 
-</details>
+
 
 ---
 
 **Q4. What is "catastrophic forgetting" and how does LoRA help mitigate it?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Catastrophic forgetting occurs when updating model weights to learn new tasks causes the model to lose performance on tasks it previously handled well. LoRA mitigates this by keeping base model weights frozen — only the small adapter matrices are updated. Since the pre-trained knowledge is locked in the original weights, it cannot be overwritten by fine-tuning. This is a significant structural advantage over full fine-tuning, which modifies all weights and is prone to forgetting.
 
-</details>
+
 
 ---
 
 **Q5. What is the practical difference between GPTQ and AWQ for serving quantized models?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Both are 4-bit post-training quantization (PTQ) methods. GPTQ uses layer-wise quantization based on second-order information (Hessians) from a calibration dataset, and is well-supported by the AutoGPTQ library. AWQ (Activation-Aware Weight Quantization) identifies which weights are most important by analysing activation magnitudes, protecting those weights with higher precision — this often produces better quality at the same bit-width. In practice: AWQ tends to outperform GPTQ on quality benchmarks; GPTQ has broader tooling support. Both are suitable for GPU serving; neither is suited to CPU inference (use GGUF for that).
 
-</details>
+
 
 ---
 
 **Q6. How do you decide which layers/modules to target with LoRA adapters?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 The standard starting point is the attention projection matrices: `q_proj` and `v_proj` (query and value). Research suggests value projections carry more task-specific information. Adding `k_proj`, `o_proj`, and feed-forward layers (`up_proj`, `down_proj`, `gate_proj`) generally improves performance but increases adapter size and training cost. A practical approach: start with `q_proj + v_proj`, establish a baseline, then expand to more modules if the baseline is insufficient.
 
-</details>
+
 
 ---
 
 **Q7. What is double quantization in QLoRA and why does it matter?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 In 4-bit quantization, each block of weights has a quantization constant (scale factor) that is typically stored in FP32 — adding overhead. Double quantization quantizes these constants themselves (e.g., from FP32 to FP8), saving an additional ~0.35 bits per parameter. On a 7B model this saves roughly 3 GB of GPU memory, which can be the difference between fitting on a 16 GB card or not.
 
-</details>
+
 
 ---
 
 **Q8. How should you format the prompt template for fine-tuning, and why does template consistency matter?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 You must use *exactly* the same prompt template during training and inference. If training data uses `### Instruction:\n{inst}\n\n### Response:\n` but inference uses `Instruction: {inst}\nAnswer:`, the model will not recognise the pattern it was trained on and outputs will degrade significantly. This is one of the most common fine-tuning bugs. Document your template as a constant in code and import it in both the training script and the inference wrapper.
 
-</details>
+
 
 ---
 
 **Q9. What is instruction tuning, and how does it differ from domain-specific fine-tuning?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Instruction tuning trains a model to follow natural-language instructions across a diverse range of tasks (summarisation, Q&A, translation, coding, etc.) — it is generalist fine-tuning for "helpfulness." Domain-specific fine-tuning trains on a narrower dataset for a specific task or domain (e.g., HR Q&A). The techniques are identical (SFT with cross-entropy loss); the difference is in dataset breadth. A common production pattern: start from an instruction-tuned base (e.g., a Llama-Instruct or Mistral-Instruct checkpoint) rather than a raw base model, then domain-fine-tune on top — you get instruction-following behaviour for free and only need to adapt style/domain.
 
-</details>
+
 
 ---
 
 **Q10. At what point does adding more fine-tuning data stop helping?**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Returns are diminishing and highly task-dependent, but a rough rule: for instruction tuning on a narrow task, improvements plateau around 1 000–5 000 high-quality examples. Beyond that, data *diversity* matters more than raw count. If eval loss has converged and qualitative outputs look good, adding more data of the same type will not help — you need harder examples, edge cases, or adversarial inputs. Monitor eval loss vs. dataset size and stop collecting when the curve flattens.
 
-</details>
+
 
 ---
 

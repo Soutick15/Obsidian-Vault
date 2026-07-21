@@ -243,35 +243,35 @@ See `labs/common/day-03/README.md` for full details and expected output.
 
 **Q1.** What is the purpose of the supervised fine-tuning (SFT) phase, and why isn't the base pretrained model sufficient for use as an assistant?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 The base model is trained only to predict the next token — it will complete any text, including harmful ones, and has no concept of instruction-following format. SFT teaches the model to behave as an assistant by training on (instruction + ideal-response) pairs, giving it the conversational format and basic instruction adherence needed for practical use.
 
-</details>
+
 
 **Q2.** You set `temperature=0` on a model call. What will you observe and why? What is the downside?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 With temperature 0, the model always picks the highest-probability token (greedy decoding). Output becomes deterministic and focused. The downside is repetitiveness and potential quality loss — greedy choices can be locally optimal but globally suboptimal, and you lose the diversity that sampling provides.
 
-</details>
+
 
 **Q3.** Explain top-p (nucleus) sampling in one sentence, and explain why it is preferred over top-k in most chat applications.
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Top-p keeps the smallest set of tokens whose cumulative probability reaches `p`, then samples from that set. It is preferred because it adapts to the model's confidence — when the model is sure, only a few tokens are in the nucleus; when uncertain, more are included — whereas top-k always keeps a fixed count regardless of how concentrated the distribution is.
 
-</details>
+
 
 **Q4.** A developer complains that their LLM responses repeat the same phrases constantly. Which two parameters could help, and how do they differ?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 - `frequency_penalty` : Frequency penalty reduces a token's probability proportionally to how many times it has already appeared (scales with count).
 
@@ -279,47 +279,47 @@ Top-p keeps the smallest set of tokens whose cumulative probability reaches `p`,
 
 - Frequency penalty is better for reducing repeated phrases; presence penalty is better for forcing topic diversity.
 
-</details>
+
 
 **Q5.** A client wants to process 500 000 customer support tickets overnight to extract structured JSON from each. They want the cheapest option with Anthropic. What two API features would you recommend?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 (1) **Batch API** — async processing at ~50% discount, ideal for non-latency-sensitive bulk workloads. 
 
 (2) **Prompt caching** — the system prompt and schema instructions are identical across all 500K calls; caching the common prefix dramatically reduces input token costs. Also, choose the smallest model that achieves acceptable quality (Haiku class).
 
-</details>
+
 
 **Q6.** What is RLHF and what problem does it solve that SFT alone cannot?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 RLHF (Reinforcement Learning from Human Feedback) trains a reward model on human preference comparisons and then fine-tunes the LLM to maximise that reward. SFT alone teaches format but can produce verbose, sycophantic, or subtly harmful outputs — RLHF calibrates the model to produce responses that humans actually prefer, including being appropriately concise, honest, and safe.
 
-</details>
+
 
 **Q7.** You have a client in healthcare with strict data residency requirements (no data may leave their private cloud). They need a capable LLM for clinical note summarisation. What model architecture/hosting approach do you recommend and why?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 An open-weight model (e.g. Llama 3 70B or Mistral Large) self-hosted in their private cloud. This provides full data control — no tokens are sent to a third-party API. The tradeoff is infrastructure cost and maintenance burden, but it is the only approach compatible with strict data residency. Consider a GPU cluster with vLLM for inference efficiency.
 
-</details>
+
 
 **Q8.** In token-based pricing, why do output tokens typically cost more than input tokens?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Input tokens can all be processed in parallel in a single forward pass (the attention mechanism processes the whole sequence simultaneously). 
 
 Output tokens must each be generated sequentially — one forward pass per output token. This makes output generation more compute-intensive per token, hence the higher price.
 
-</details>
+
 
 ---
 
@@ -329,26 +329,26 @@ Output tokens must each be generated sequentially — one forward pass per outpu
 
 **Q1. "How does an LLM actually produce text — walk me through the mechanics."**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 At inference time, the model takes the input tokens, runs them through all transformer layers, and produces a vector of logits — one number per vocabulary token (often 32K–128K tokens). Softmax converts those logits into a probability distribution. We then sample one token from that distribution using our chosen strategy (greedy, top-p, etc.), append it to the sequence, and repeat. This autoregressive loop continues until a stop condition — a stop sequence or max token limit. The key insight is that the model never "thinks ahead" — it makes one token decision at a time, each conditioned on everything before it.
 
-</details>
+
 
 **Q2. "A stakeholder wants our AI feature to be 'more creative.' What do you actually change in the API call, and what are the risks?"**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Increase `temperature` (e.g. from 0.7 to 1.0–1.2) and consider widening `top_p` slightly. Higher temperature flattens the probability distribution, making lower-probability tokens more likely — which produces more varied, surprising outputs. The risks are: outputs may become factually unreliable (hallucinations increase), structurally inconsistent (harder to parse as JSON), or occasionally incoherent. For a production feature I'd benchmark quality metrics at a few temperature values and pick the highest temperature that still meets accuracy/format requirements.
 
-</details>
+
 
 **Q3. "We're worried about LLM API costs scaling with our user base. How do you manage that?"**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Four levers: 
 
@@ -360,30 +360,30 @@ Four levers:
 
 (4) **Batching** — for non-real-time workloads, batch APIs offer ~50% discounts. Also set `max_tokens` tightly and count tokens before sending with `tiktoken` / `anthropic.count_tokens` to forecast cost before scaling.
 
-</details>
+
 
 **Q4. "Why would we choose an open-source model over Claude or GPT?"**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 The main reasons are: (1) **Data privacy / compliance** — data never leaves your infrastructure; important for healthcare, finance, and legal applications. (2) **Cost at scale** — at very high volume, hosting a GPU cluster can be cheaper than per-token API pricing. (3) **Customisation** — open-weight models can be fine-tuned on proprietary data without sending that data to a third party. (4) **Latency control** — no network round-trip; local inference on fast hardware can beat hosted APIs. The trade-offs are infrastructure complexity, the need for ML ops expertise, and typically lower out-of-the-box capability than frontier models at equivalent parameter counts.
 
-</details>
+
 
 **Q5. "What is RLHF and why does it matter for our production application?"**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 RLHF — Reinforcement Learning from Human Feedback — is the process that turns a raw language model into a helpful assistant. Human raters compare model outputs and label which is better; a reward model is trained on these preferences; then the LLM is fine-tuned to maximise the reward. For a production application, RLHF matters because it is what makes the model refuse harmful requests, follow instructions precisely, give concise answers, and maintain a consistent tone. If you use a base model without RLHF (which some open-source checkpoints are), you get a very capable text-completer that is unpredictable as an assistant.
 
-</details>
+
 
 **Q6. "How do you choose between Claude, GPT, and an open-source model for a new project?"**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 I evaluate five dimensions: 
 
@@ -397,43 +397,43 @@ I evaluate five dimensions:
 
 (5) **Data compliance** — if there are data residency or privacy requirements, open-weight self-hosted may be the only option. I typically prototype with a hosted model (cheapest iteration) and revisit hosting if cost or compliance forces it.
 
-</details>
+
 
 **Q7. "What are stop sequences and when would you use them?"**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Stop sequences are strings that cause the model to halt generation immediately when produced — the stop string itself is not included in the output. They're useful for: structured output (stop at the closing `}` of a JSON object), multi-turn dialogue (stop at `\nHuman:` to prevent the model from role-playing the next turn), code extraction (stop at the closing code fence), and in RAG pipelines where you want exactly one answer before a delimiter. They're a lightweight, zero-cost way to enforce output boundaries without prompt complexity.
 
-</details>
+
 
 **Q8. "Explain the difference between frequency penalty and presence penalty."**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Both discourage repetition, but the mechanism differs. Frequency penalty reduces a token's logit proportionally to how many times it has already appeared in the output — the more it's been used, the harder it's penalised. Presence penalty applies a flat, one-time penalty to any token that has appeared at all, regardless of count. In practice: use frequency penalty to suppress repeated phrases (e.g. a model that keeps saying "certainly!"); use presence penalty to encourage the model to explore new topics rather than circling back to ones it has already mentioned.
 
-</details>
+
 
 **Q9. "A client asks whether we can fine-tune Claude to speak in their brand voice. How do you answer?"**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 For Anthropic's Claude, fine-tuning is not publicly available — the model is accessed only through the API. To achieve brand voice, the practical approach is prompt engineering: a detailed system prompt that describes the tone, style, and example phrases, potentially with a few-shot examples of ideal responses. For clients where fine-tuning is a hard requirement, the path is open-weight models (Llama, Mistral) where you can run supervised fine-tuning on brand voice examples using tools like Hugging Face TRL or Axolotl. I'd always recommend validating whether prompt engineering is sufficient before committing to the complexity and cost of fine-tuning.
 
-</details>
+
 
 **Q10. "What is context window size and why does it matter practically?"**
 
-<details>
-<summary>Show answer</summary>
+
+
 
 The context window is the maximum number of tokens the model can "see" at once — both input and output combined. It matters practically because it determines: (1) how long a document you can process in one call, (2) how much conversation history you can maintain in a chat, (3) how many retrieved chunks you can fit in a RAG prompt. Most current frontier models offer 128K–1M token windows, which is large enough for most tasks, but beware: performance often degrades on very long contexts (the model may miss information in the middle), and longer contexts cost more in input tokens. For tasks like full-book summarisation or very long code analysis, context window limits are a real architectural constraint.
 
-</details>
+
 
 ---
 

@@ -449,6 +449,8 @@ Comprehensions are concise, readable alternatives to `for` loops that build new 
 
 **Syntax pattern :**  Build List
 
+"Create a new collection whose elements are `expression`, for every `item` in `collection` where the condition is matched"
+
 ```PYTHon
 [
 	expression 
@@ -464,6 +466,12 @@ Comprehensions are concise, readable alternatives to `for` loops that build new 
 ```
 
 squares of even numbers from a list.
+
+```
+for n in numbers
+if n is even
+store n**n
+```
 
 ```python
 numbers = [1, 2, 3, 4, 5, 6, 7, 8]
@@ -967,15 +975,15 @@ def set_age(age):
 
 #### Common built-in exceptions to know
 
-| Exception | Triggered when |
-|-----------|----------------|
-| `KeyError` | Dict key does not exist |
-| `ValueError` | Right type, wrong value (e.g., `int("abc")`) |
-| `TypeError` | Wrong type (e.g., `"a" + 1`) |
-| `IndexError` | List index out of range |
-| `AttributeError` | Object does not have the attribute |
-| `ZeroDivisionError` | Division by zero |
-| `FileNotFoundError` | File path does not exist |
+| Exception           | Triggered when                               |
+| ------------------- | -------------------------------------------- |
+| `KeyError`          | Dict key does not exist                      |
+| `ValueError`        | Right type, wrong value (e.g., `int("abc")`) |
+| `TypeError`         | Wrong type (e.g., `"a" + 1`)                 |
+| `IndexError`        | List index out of range                      |
+| `AttributeError`    | Object does not have the attribute           |
+| `ZeroDivisionError` | Division by zero                             |
+| `FileNotFoundError` | File path does not exist                     |
 
 ---
 
@@ -1028,18 +1036,23 @@ def append_item(value, lst=[]):
     lst.append(value)
     return lst
 
-print(append_item(1))
-print(append_item(2))
-```
-
-```
-[1]
-[1, 2]
+print(append_item(1)) # [1]
+print(append_item(2)) # [1, 2]
 ```
 
 This is the **mutable default argument** trap. The default list `[]` is created once when the function is defined, not on every call. Subsequent calls share the same list object. The safe fix is `def append_item(value, lst=None): if lst is None: lst = []`.
 
+```python
+def append_item(value, lst=None) :
+	if lst is None:
+		lst = []
+	
+	lst.append(value)
+	return lst
 
+print(append_item(1)) # 1
+print(append_item(2)) # 2
+```
 
 
 **Q5. A function is called with `func(1, 2, c=3, d=4)`. Write a signature that captures all four arguments.**

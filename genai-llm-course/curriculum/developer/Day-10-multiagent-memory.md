@@ -1,3 +1,4 @@
+
 # Day 10 — Multi-Agent Patterns & Agent Memory
 
 **Track:** Developer | **Week:** 2 | **Day:** 10 of 15
@@ -228,90 +229,90 @@ See `labs/developer/day-10/README.md` for full setup and run instructions.
 
 **Q1.** In the orchestrator/router pattern, which agent talks directly to the user?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 The **orchestrator** handles the user-facing conversation. Specialists (workers) only receive structured messages from the orchestrator and return structured results back to it; they never talk directly to the user.
 
-</details>
+
 
 ---
 
 **Q2.** A sequential pipeline has four stages. Stage 2 produces a hallucination. What happens in stages 3 and 4?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Stages 3 and 4 process the hallucinated output as if it were correct — they have no way to know it is wrong unless a fact-checking agent is explicitly included. This is the key risk of sequential pipelines: errors propagate downstream.
 
-</details>
+
 
 ---
 
 **Q3.** You have a 20-turn conversation and the context window is nearly full. What technique keeps the agent from losing all earlier context?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 **Summarisation / compaction**: compress earlier turns into a short summary, prepend that as a system message, and keep only the most recent N turns in full. This maintains an effective unlimited memory at the cost of some fidelity.
 
-</details>
+
 
 ---
 
 **Q4.** What is the difference between short-term and long-term agent memory?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 - **Short-term memory** lives in the current context window (the `messages` list). It is lost when the session ends.
 - **Long-term memory** is persisted externally (e.g., a vector store). Q&A pairs from past sessions are embedded and retrieved via similarity search, injecting relevant past knowledge into new sessions.
 
-</details>
+
 
 ---
 
 **Q5.** Name two guardrails that prevent a debate/critic loop from running forever.
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Any two of: (1) **max iteration count** (`turn >= MAX_TURNS`), (2) **token budget cap**, (3) **loop detection** (hash last N outputs), (4) **wall-clock timeout**, (5) **confidence threshold** (stop when critic score exceeds a threshold).
 
-</details>
+
 
 ---
 
 **Q6.** When should you prefer a *single* agent over a multi-agent system?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 When the task is **homogeneous** (one domain, one skill set), the **latency budget is tight**, or the problem is **small and well-defined**. Adding agents only makes sense when you can name a specific failure mode that multi-agent architecture fixes.
 
-</details>
+
 
 ---
 
 **Q7.** What does LangGraph add over writing multi-agent orchestration by hand?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 LangGraph provides a **state machine / graph abstraction**: nodes are agents/functions, edges are transitions. It handles state passing, conditional routing, cycles, and checkpointing out of the box, reducing orchestration boilerplate — at the cost of a framework dependency and learning curve.
 
-</details>
+
 
 ---
 
 **Q8.** In a parallel worker pattern, an orchestrator fans out to three specialists. What extra step is always required?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 A **merging / synthesis step**: the orchestrator (or a dedicated merger agent) must combine the three specialist outputs into a single coherent response before returning it to the user.
 
-</details>
+
 
 ---
 
@@ -319,30 +320,30 @@ A **merging / synthesis step**: the orchestrator (or a dedicated merger agent) m
 
 **Q1.** How do you design a routing prompt that is robust to paraphrase and ambiguous queries?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Use a **few-shot classification prompt** that maps diverse phrasings to a fixed set of route labels. Include at minimum 2–3 examples per route. For ambiguous inputs, instruct the router to return a **confidence score** alongside the label; if confidence is below a threshold, route to a **disambiguation** path (ask the user a clarifying question) rather than guessing. Regularly evaluate the router on a held-out set of real queries and update examples when it misclassifies.
 
-</details>
+
 
 ---
 
 **Q2.** What are the failure modes unique to multi-agent systems that do not exist in single-agent systems?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Key failure modes include: (1) **message loss** — an agent returns no output and the orchestrator hangs; (2) **conflicting outputs** — two specialists give contradictory answers and the merger produces an incoherent blend; (3) **cascade failure** — an early pipeline stage error propagates unchecked; (4) **infinite loops** — debate/critic cycles with no stopping criterion; (5) **context fragmentation** — each specialist sees only a slice of the full conversation and misses important context; (6) **cost explosion** — each routing hop multiplies token spend; (7) **prompt injection across agents** — malicious content from one agent's output corrupts the next agent's prompt.
 
-</details>
+
 
 ---
 
 **Q3.** How does summarisation-based compaction differ from RAG-based long-term memory, and when would you use each?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 **Summarisation/compaction** compresses the *current session's* history into a rolling summary that stays in the context window. It is lossless at the sentence level but lossy at the detail level; all information is still "in context" in compressed form.
 
@@ -350,62 +351,62 @@ Key failure modes include: (1) **message loss** — an agent returns no output a
 
 Use compaction when you need the agent to track the *flow* of the current conversation (e.g., "as I mentioned two turns ago…"). Use long-term RAG when the agent should recall *facts established in previous sessions* (e.g., "last week you told me your leave balance is X").
 
-</details>
+
 
 ---
 
 **Q4.** Describe a concrete strategy for passing state between an orchestrator and a specialist agent without leaking full conversation history into the specialist's context.
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Construct a **specialist brief**: extract only the fields the specialist needs — the current query, relevant retrieved documents, and a short summary of prior turns relevant to this sub-task. Pass this as a structured input (JSON or a formatted system prompt). The specialist never receives the raw full `messages` list. This keeps specialist context small (lower cost, lower distraction) and prevents the specialist from "going off-script" based on tangential earlier context.
 
-</details>
+
 
 ---
 
 **Q5.** What embedding model trade-offs matter when choosing between `all-MiniLM-L6-v2` and `all-mpnet-base-v2` for long-term memory retrieval?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 `all-MiniLM-L6-v2` is ~22 M parameters, produces 384-dim vectors, and runs in ~15–30 ms per sentence on CPU. It is excellent for high-throughput, latency-sensitive applications. `all-mpnet-base-v2` is ~110 M parameters, produces 768-dim vectors, and is 3–5× slower but consistently outperforms MiniLM on retrieval benchmarks (BEIR suite). For HR Q&A memory retrieval where latency is not critical (pre-conversation), `mpnet` gives higher recall. For real-time in-conversation retrieval under a <100 ms budget, `MiniLM` is the safer choice.
 
-</details>
+
 
 ---
 
 **Q6.** How would you implement a "cost guardrail" that aborts an orchestrator loop when cumulative token spend exceeds a budget?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Track a `total_tokens` counter. After each LLM call, add the tokens reported by the API response (`usage.input_tokens + usage.output_tokens` for Anthropic; `usage.prompt_tokens + usage.completion_tokens` for OpenAI). Before each new call, check `if total_tokens + estimated_next_call > BUDGET: raise CostLimitExceeded(...)`. In mock mode, simulate token counts deterministically. Log the final token tally so operators can tune the budget. Optionally expose a `remaining_budget_pct` field in the agent state so downstream agents can self-throttle (e.g., produce shorter responses when budget is low).
 
-</details>
+
 
 ---
 
 **Q7.** In a debate pattern, how do you prevent the critic from becoming sycophantic (always approving the generator's output)?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 Include an explicit **adversarial instruction** in the critic's system prompt: "Your role is to find flaws, not to validate. You MUST identify at least one specific issue per review. If the answer is genuinely correct, say so but explain exactly why it is correct rather than just approving it." Use **structured output** (JSON with fields `issues: list[str]`, `score: int 1–5`, `approved: bool`) so you can detect an empty `issues` list mechanically. If `issues` is empty too often in evaluation runs, tighten the adversarial instruction or add few-shot examples of rigorous critiques.
 
-</details>
+
 
 ---
 
 **Q8.** What is the semantic difference between an agent *tool call* (Day 9) and an agent *handoff* (Day 10)?
 
-<details>
-<summary>Show answer</summary>
+
+
 
 A **tool call** invokes a deterministic function (search index, calculator, API) that returns a value. The calling agent remains in control; it uses the returned value to compose its final answer. A **handoff** transfers *responsibility and context* to another LLM-backed agent. The receiving agent exercises its own reasoning, may make its own tool calls, and returns a *synthesised answer* rather than a raw value. Handoffs are higher-level, more expensive, and introduce a second point of potential failure or hallucination.
 
-</details>
+
 
 ---
 
